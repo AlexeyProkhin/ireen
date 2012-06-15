@@ -61,7 +61,8 @@ Q_GLOBAL_STATIC(CodecWrapper, codecWrapper)
 
 extern QTextCodec *asciiCodec()
 {
-	Q_ASSERT(_asciiCodec);
+	if (!_asciiCodec)
+		_asciiCodec = QTextCodec::codecForLocale();
 	return _asciiCodec;
 }
 
