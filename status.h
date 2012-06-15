@@ -53,14 +53,14 @@ public:
 		m_id(id),
 		m_text(text)
 	{}
-	quint16 id() { return m_id; }
+	quint16 id() const { return m_id; }
 	void setId(quint16 id) { m_id = id; }
-	QString text() { return m_text; }
+	QString text() const { return m_text; }
 	void setText(const QString &text) { m_text = text; }
 	void addCapability(const QString &name, const Capability &cap) { m_caps.insert(name, cap); }
 	void removeCapability(const QString &name) { m_caps.remove(name); }
 	bool hasCapability(const QString &name) { return m_caps.contains(name); }
-	CapabilityHash capabilities() { return m_caps; }
+	CapabilityHash capabilities() const { return m_caps; }
 	bool operator==(quint16 id) { return m_id == id; }
 	void operator=(quint16 id) { m_caps.clear(); m_text.clear(); m_id = id; }
 	static QSet<QString> allSupportedCapabilityTypes();
