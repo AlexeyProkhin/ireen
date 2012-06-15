@@ -190,38 +190,36 @@ quint32 ConnectionRate::getTimeDiff(const QDateTime &dateTime)
 		return 86400000;
 }
 
-AbstractConnection::AbstractConnection(QObject *parent) :
-	QObject(parent), d_ptr(new AbstractConnectionPrivate)
+void AbstractConnectionPrivate::init(AbstractConnection *q)
 {
-	Q_D(AbstractConnection);
-	d->aliveTimer.setInterval(180000);
-	connect(&d->aliveTimer, SIGNAL(timeout()), SLOT(sendAlivePacket()));
-	d->socket = new Socket(this);
+	aliveTimer.setInterval(180000);
+	q->connect(&aliveTimer, SIGNAL(timeout()), SLOT(sendAlivePacket()));
+	socket = new Socket(q);
 #if IREEN_SSL_SUPPORT
-	d->socket->setProtocol(QSsl::TlsV1);
-	d->socket->setPeerVerifyMode(QSslSocket::VerifyNone); // TODO:
+	socket->setProtocol(QSsl::TlsV1);
+	socket->setPeerVerifyMode(QSslSocket::VerifyNone); // TODO:
 #endif
 
 #if IREEN_USE_MD5_LOGIN
-	d->sslMode = true;
+	sslMode = false;
 #else
-	d->sslMode = false;
+	sslMode = true;
 #endif
 
-	connect(d->socket, SIGNAL(readyRead()), SLOT(readData()));
-	connect(d->socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
+	q->connect(socket, SIGNAL(readyRead()), SLOT(readData()));
+	q->connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
 			SLOT(stateChanged(QAbstractSocket::SocketState)));
-	connect(d->socket, SIGNAL(error(QAbstractSocket::SocketError)),
+	q->connect(socket, SIGNAL(error(QAbstractSocket::SocketError)),
 			SLOT(error(QAbstractSocket::SocketError)));
 
 	{
 		ClientInfo info =
 		{ "ICQ Client", 266, 20, 52, 1, 3916, 85, "en", "us" };
-		d->clientInfo = info;
+		clientInfo = info;
 	}
-	d->id = (quint32) qrand();
-	d->error = NoError;
-	m_infos << SNACInfo(ServiceFamily, ServiceServerReady)
+	id = (quint32) qrand();
+	error = AbstractConnection::NoError;
+	q->m_infos << SNACInfo(ServiceFamily, ServiceServerReady)
 			<< SNACInfo(ServiceFamily, ServiceServerNameInfo)
 			<< SNACInfo(ServiceFamily, ServiceServerFamilies2)
 			<< SNACInfo(ServiceFamily, ServiceServerAsksServices)
@@ -233,7 +231,13 @@ AbstractConnection::AbstractConnection(QObject *parent) :
 			  << SNACInfo(ServiceFamily, ServiceClientRateAck)
 			  << SNACInfo(ServiceFamily, ServiceClientReady)
 			  << SNACInfo(ServiceFamily, ServiceClientNewService);
-	registerInitializationSnacs(initSnacs);
+	q->registerInitializationSnacs(initSnacs);
+}
+
+AbstractConnection::AbstractConnection(QObject *parent) :
+	QObject(parent), d_ptr(new AbstractConnectionPrivate)
+{
+	d_func()->init(this);
 }
 
 AbstractConnection::~AbstractConnection()
@@ -423,7 +427,7 @@ void AbstractConnection::registerInitializationSnac(quint16 family, quint16 subt
 AbstractConnection::AbstractConnection(AbstractConnectionPrivate *d, QObject *parent):
 	QObject(parent), d_ptr(d)
 {
-	d_func()->state = Unconnected;
+	d->init(this);
 }
 
 const FLAP &AbstractConnection::flap()

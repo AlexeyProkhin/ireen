@@ -96,6 +96,9 @@ public:
 	AbstractConnection::State state;
 	QSet<SNACInfo> initSnacs; // Snacs that are allowed when initializing connection
 	QTimer aliveTimer;
+private:
+	friend class AbstractConnection;
+	void init(AbstractConnection *q);
 };
 
 } // namespace Ireen
