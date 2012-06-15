@@ -105,9 +105,6 @@ protected:
 	void handleRemoveCLItem(const FeedbagItem &item);
 	virtual void handleSNAC(AbstractConnection *conn, const SNAC &snac);
 	void handleNewStatus(const SNAC &snac, bool online);
-private slots:
-	void reloadingStarted();
-	void loginFinished();
 };
 
 } // namespace Ireen

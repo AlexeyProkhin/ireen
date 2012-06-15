@@ -54,7 +54,9 @@ public:
 		m_text(text)
 	{}
 	quint16 id() { return m_id; }
+	void setId(quint16 id) { m_id = id; }
 	QString text() { return m_text; }
+	void setText(const QString &text) { m_text = text; }
 	void addCapability(const QString &name, const Capability &cap) { m_caps.insert(name, cap); }
 	void removeCapability(const QString &name) { m_caps.remove(name); }
 	bool hasCapability(const QString &name) { return m_caps.contains(name); }

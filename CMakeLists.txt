@@ -88,6 +88,7 @@ SET(QT_MIN_VERSION "4.6.0")
 # Search for QT4
 FIND_PACKAGE(Qt4 COMPONENTS QtCore QtNetwork QtGui REQUIRED)
 INCLUDE(${QT_USE_FILE})
+INCLUDE(ireenMacros)
 
 
 if(IREEN_USE_INTERNAL_HMAC)
@@ -119,7 +120,7 @@ INCLUDE_DIRECTORIES(
 )
 
 # Generate moc files
-QT_WRAP_CPP(MOC_SRC ${HDR})
+IREEN_WRAP_CPP(MOC_SRC ${HDR})
 
 # This project will generate library
 ADD_LIBRARY(ireen SHARED ${SRC} ${MOC_SRC} ${HDR} )

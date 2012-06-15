@@ -35,7 +35,8 @@ namespace Ireen {
 
 Md5Login::Md5Login(Client *client, const QString &password) :
 	AbstractConnection(client),
-	m_port(0),
+	m_loginPort(0),
+	m_bossPort(0),
 	m_client(client),
 	m_password(password),
 	m_hostReqId(0)
@@ -60,35 +61,36 @@ Md5Login::~Md5Login()
 		QHostInfo::abortHostLookup(m_hostReqId);
 }
 
+void Md5Login::setLoginServer(const QString &server, quint16 port)
+{
+	m_loginServer = server;
+	m_loginPort   = port;
+}
+
 void Md5Login::login()
 {
-	m_addr.clear();
+	m_bossAddr.clear();
 	m_cookie.clear();
 	// Connecting to login server
 	Socket *s = socket();
 	if (s->state() != QAbstractSocket::UnconnectedState)
 		s->abort();
-	if (m_host.isEmpty())
-		m_host = QLatin1String("login.icq.com");
-	if (m_port == 0)
-		m_port = 5190;
-	m_hostReqId = QHostInfo::lookupHost(m_host, this, SLOT(hostFound(QHostInfo)));
+	QString loginServer = m_loginServer.isEmpty() ? QLatin1String("login.icq.com") : m_loginServer;
+	m_hostReqId = QHostInfo::lookupHost(loginServer, this, SLOT(hostFound(QHostInfo)));
 }
 
 #if IREEN_SSL_SUPPORT
 void Md5Login::sslLogin()
 {
-	m_addr.clear();
+	m_bossAddr.clear();
 	m_cookie.clear();
 	// Connecting to login server
 	Socket *s = socket();
 	if (s->state() != QAbstractSocket::UnconnectedState)
 		s->abort();
-	if (m_host.isEmpty())
-		m_host = QLatin1String("slogin.icq.com");
-	if (m_port == 0)
-		m_port = 443;
-	socket()->connectToHostEncrypted(m_host, m_port);
+	QString loginServer = m_loginServer.isEmpty() ? QLatin1String("slogin.icq.com") : m_loginServer;
+	quint16 loginPort   = m_loginPort ? 443 : m_loginPort;
+	socket()->connectToHostEncrypted(loginServer, loginPort);
 }
 #endif
 
@@ -96,9 +98,10 @@ void Md5Login::hostFound(const QHostInfo &host)
 {
 	m_hostReqId = 0;
 	if (!host.addresses().isEmpty()) {
-		socket()->connectToHost(host.addresses().at(qrand() % host.addresses().size()), m_port);
+		quint16 loginPort = m_loginPort ? 5190 : m_loginPort;
+		socket()->connectToHost(host.addresses().at(qrand() % host.addresses().size()), loginPort);
 	} else {
-		setError(HostNotFound, tr("No IP addresses were found for the host '%1'").arg(m_host));
+		setError(HostNotFound, tr("No IP addresses were found for the host '%1'").arg(m_loginServer));
 	}
 }
 
@@ -119,8 +122,8 @@ void Md5Login::processNewConnection()
 void Md5Login::processCloseConnection()
 {
 	AbstractConnection::processCloseConnection();
-	if (!m_addr.isEmpty())
-		m_client->d_func()->connectToBOSS(m_addr, m_port, m_cookie);
+	if (!m_bossAddr.isEmpty())
+		m_client->d_func()->connectToBOSS(m_bossAddr, m_bossPort, m_cookie);
 	else
 		m_client->disconnectFromHost();
 }
@@ -160,8 +163,8 @@ void Md5Login::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 		TLVMap tlvs = sn.read<TLVMap>();
 		if (tlvs.contains(0x01) && tlvs.contains(0x05) && tlvs.contains(0x06)) {
 			QList<QByteArray> list = tlvs.value(0x05).data().split(':');
-			m_addr = list.at(0);
-			m_port = list.size() > 1 ? atoi(list.at(1).constData()) : 5190;
+			m_bossAddr = list.at(0);
+			m_bossPort = list.size() > 1 ? atoi(list.at(1).constData()) : 5190;
 			m_cookie = tlvs.value(0x06).data();
 		} else {
 			DataUnit data(tlvs.value(0x0008));

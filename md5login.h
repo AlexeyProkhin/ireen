@@ -53,13 +53,13 @@ protected:
 private slots:
 	void hostFound(const QHostInfo &host);
 private:
-	void setLoginData(const QString &addr, quint16 port, const QByteArray &cookie);
 #if IREEN_SSL_SUPPORT
 	bool useSsl;
 #endif
-	QString m_host;
-	QString m_addr;
-	quint16 m_port;
+	QString m_loginServer;
+	quint16 m_loginPort;
+	QByteArray m_bossAddr;
+	quint16 m_bossPort;
 	QByteArray m_cookie;
 	Client *m_client;
 	QString m_password;
