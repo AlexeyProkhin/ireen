@@ -197,6 +197,17 @@ Channel2ResponseMessage::Channel2ResponseMessage(const QString &uin, quint8 type
 												 quint8 flags, const Cookie &cookie) :
 	ServerResponseMessage(uin, 2, 3, cookie)
 {
+	init(type, flags);
+}
+
+Channel2ResponseMessage::Channel2ResponseMessage(const QString &uin, const Cookie &cookie) :
+	ServerResponseMessage(uin, 2, 3, cookie)
+{
+	init(MsgPlain, 0);
+}
+
+void Channel2ResponseMessage::init(quint8 type, quint8 flags)
+{
 	Tlv2711 responseTlv(type, flags, 0, 0);
 	responseTlv.appendEmptyPacket();
 	responseTlv.appendColors();

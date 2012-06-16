@@ -142,7 +142,10 @@ public:
 class IREEN_EXPORT Channel2ResponseMessage : public ServerResponseMessage
 {
 public:
-	Channel2ResponseMessage(const QString &uin, quint8 type, quint8 flags, const Cookie &cookie = Cookie(true));
+	Channel2ResponseMessage(const QString &uin, quint8 type, quint8 flags, const Cookie &cookie);
+	Channel2ResponseMessage(const QString &uin, const Cookie &cookie);
+private:
+	void init(quint8 type, quint8 flags);
 };
 
 } // namespace Ireen
