@@ -86,6 +86,26 @@ Client::Client(const QString &uin, QObject *parent) :
 	registerInitializationSnac(BosFamily, PrivacyReqRights);
 
 	connect(d->feedbag, SIGNAL(loaded()), this, SLOT(finishLogin()));
+
+	// ICQ UTF8 Support
+	d->caps.append(ICQ_CAPABILITY_UTF8);
+	// Buddy Icon
+	d->caps.append(ICQ_CAPABILITY_AIMICON);
+	// RTF messages
+	//d->caps.append(ICQ_CAPABILITY_RTFxMSGS);
+	// qutIM some shit
+	d->caps.append(Capability(0x69716d75, 0x61746769, 0x656d0000, 0x00000000));
+	d->caps.append(Capability(0x09461343, 0x4c7f11d1, 0x82224445, 0x53540000));
+	// HTML messages
+	d->caps.append(ICQ_CAPABILITY_HTMLMSGS);
+	// ICQ typing
+	d->caps.append(ICQ_CAPABILITY_TYPING);
+	// Xtraz
+	d->caps.append(ICQ_CAPABILITY_XTRAZ);
+	// Messages on channel 2
+	d->caps.append(ICQ_CAPABILITY_SRVxRELAY);
+	// Short capability support
+	d->caps.append(ICQ_CAPABILITY_SHORTCAPS);
 }
 
 void Client::login(const QString &password)

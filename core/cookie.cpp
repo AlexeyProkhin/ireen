@@ -142,8 +142,9 @@ Client *Cookie::client()
 
 void Cookie::setClient(Client *client)
 {
-	Q_ASSERT(!isLocked());
-	d_func()->client = client;
+	Q_D(Cookie);
+	Q_ASSERT(!d->client || !isLocked());
+	d->client = client;
 }
 
 QString Cookie::uin() const
