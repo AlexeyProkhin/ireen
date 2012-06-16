@@ -59,6 +59,13 @@ Cookie::Cookie(bool generate):
 	d->client = 0;
 }
 
+Cookie::Cookie(quint64 id) :
+	d_ptr(new CookiePrivate(id))
+{
+	Q_D(Cookie);
+	d->client = 0;
+}
+
 Cookie::Cookie(Client *client, quint64 id):
 	d_ptr(new CookiePrivate(id))
 {

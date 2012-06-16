@@ -40,7 +40,8 @@ class IREEN_EXPORT Cookie
 {
 	Q_DECLARE_PRIVATE(Cookie)
 public:
-	Cookie(bool generate = false);
+	explicit Cookie(bool generate = false);
+	Cookie(quint64 id);
 	Cookie(Client *client, quint64 id);
 	Cookie(Client *client, const QString &uin, quint64 id = 0);
 	Cookie(const Cookie &cookie);
