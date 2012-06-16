@@ -35,7 +35,7 @@ namespace Ireen {
 class MessageHandlerPrivate : public SNACHandler
 {
 public:
-	MessageHandlerPrivate(MessagesHandler *q_ptr, Client *client);
+	MessageHandlerPrivate(MessageHandler *q_ptr, Client *client);
 	void handleSNAC(AbstractConnection *client, const SNAC &snac);
 	void handleMessage(const SNAC &snac);
 	void handleResponse(const SNAC &snac);
@@ -49,10 +49,10 @@ public:
 	QMultiHash<Capability, MessagePlugin *> msg_plugins;
 	QMultiHash<Tlv2711Type, Tlv2711Plugin *> tlvs2711Plugins;
 	Client *client;
-	MessagesHandler *q;
+	MessageHandler *q;
 };
 
-MessageHandlerPrivate::MessageHandlerPrivate(MessagesHandler *q_ptr, Client *client) :
+MessageHandlerPrivate::MessageHandlerPrivate(MessageHandler *q_ptr, Client *client) :
 	q(q_ptr)
 {
 	m_infos << SNACInfo(ServiceFamily, ServiceServerAsksServices)
@@ -73,26 +73,26 @@ MessageHandlerPrivate::MessageHandlerPrivate(MessagesHandler *q_ptr, Client *cli
 	q->connect(client, SIGNAL(loginFinished()), SLOT(loginFinished()));
 }
 
-MessagesHandler::MessagesHandler(Client *client) :
+MessageHandler::MessageHandler(Client *client) :
 	d(new MessageHandlerPrivate(this, client))
 {
 }
 
-MessagesHandler::~MessagesHandler()
+MessageHandler::~MessageHandler()
 {
 }
 
-void MessagesHandler::registerHandler(const Capability &capability, MessagePlugin *handler)
+void MessageHandler::registerHandler(const Capability &capability, MessagePlugin *handler)
 {
 	d->msg_plugins.insert(capability, handler);
 }
 
-void MessagesHandler::registerHandler(const Capability &type, quint16 id, Tlv2711Plugin *handler)
+void MessageHandler::registerHandler(const Capability &type, quint16 id, Tlv2711Plugin *handler)
 {
 	d->tlvs2711Plugins.insert(Tlv2711Type(type, id), handler);
 }
 
-void MessagesHandler::setDetectCodec(bool detectCodec)
+void MessageHandler::setDetectCodec(bool detectCodec)
 {
 	d->detectCodec = detectCodec;
 }
@@ -186,7 +186,7 @@ void MessageHandlerPrivate::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 	}
 }
 
-void MessagesHandler::loginFinished()
+void MessageHandler::loginFinished()
 {
 	// Offline messages request
 	d->sendMetaInfoRequest(0x003C);

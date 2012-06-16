@@ -60,12 +60,12 @@ protected:
 	QSet<Tlv2711Type> m_tlvs2711Types;
 };
 
-class IREEN_EXPORT MessagesHandler : public QObject
+class IREEN_EXPORT MessageHandler : public QObject
 {
 	Q_OBJECT
 public:
-	MessagesHandler(Client *client);
-	virtual ~MessagesHandler();
+	MessageHandler(Client *client);
+	virtual ~MessageHandler();
 	void registerHandler(const Capability &capability, MessagePlugin *handler);
 	void registerHandler(const Capability &type, quint16 id, Tlv2711Plugin *handler);
 	void setDetectCodec(bool detectCodec = true);
