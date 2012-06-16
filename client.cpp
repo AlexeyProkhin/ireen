@@ -345,10 +345,25 @@ void Client::onCookieTimeout()
 	QObject *receiver = cookie.receiver();
 	const char *member = cookie.member();
 	if (receiver && member) {
-		const QMetaObject *metaObject = receiver->metaObject();
-		int index = metaObject->indexOfMethod(QMetaObject::normalizedSignature(member));
+		const QMetaObject *meta = receiver->metaObject();
+		const char type = member[0];
+		QByteArray tmp = QMetaObject::normalizedSignature(&member[1]);
+		member = tmp.constData();
+
+		int index = -1;
+		switch (type) {
+		case '0': index = meta->indexOfMethod(member); break;
+		case '1': index = meta->indexOfSlot(member);   break;
+		case '2': index = meta->indexOfSignal(member); break;
+		default:  break;
+		}
+
 		if (index != -1) {
-			metaObject->method(index).invoke(receiver, Qt::AutoConnection, Q_ARG(Cookie, cookie));
+			meta->method(index).invoke(
+						receiver,
+						Qt::AutoConnection,
+						Q_ARG(Cookie, cookie),
+						Q_ARG(QString, cookie.uin()));
 		}
 	}
 	// cookie.unlock(); // Commented out as this cookie is already unlocked
