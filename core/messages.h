@@ -148,6 +148,13 @@ private:
 	void init(quint8 type, quint8 flags);
 };
 
+// Typing notification
+class IREEN_EXPORT MTNMessage : public SNAC
+{
+public:
+	MTNMessage(const QString &uin, MTN status);
+};
+
 } // namespace Ireen
 
 #endif // IREEN_MESSAGES_H

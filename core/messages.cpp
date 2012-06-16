@@ -214,5 +214,14 @@ void Channel2ResponseMessage::init(quint8 type, quint8 flags)
 	append(responseTlv.data());
 }
 
+MTNMessage::MTNMessage(const QString &uin, MTN status) :
+	SNAC(MessageFamily, MessageMtn)
+{
+	append(Cookie(true));
+	append<quint16>(1); // channel?
+	append<quint8>(uin);
+	append<quint16>(status);
+}
+
 } // namespace Ireen
 
