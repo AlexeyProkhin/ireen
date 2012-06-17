@@ -45,15 +45,19 @@ class IREEN_EXPORT ContactItem
 {
 public:
 	ContactItem();
+	ContactItem(const FeedbagItem &item);
 	~ContactItem();
 	ContactItem(const ContactItem &other);
 	void operator=(const ContactItem &other);
 	QString uin() const;
 	QString name() const;
+	void setName(const QString &name);
 	quint16 groupId() const;
 	QString group() const;
 	QString protocol() const;
 	QString comment() const;
+	void setComment(const QString &comment);
+	FeedbagItem &feedbagItem() const;
 private:
 	friend class Roster;
 	QExplicitlySharedDataPointer<ContactItemPrivate> d;

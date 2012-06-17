@@ -67,6 +67,13 @@ ContactItem::ContactItem() :
 {
 }
 
+ContactItem::ContactItem(const FeedbagItem &item) :
+	d(new ContactItemPrivate)
+{
+	d->setFeedbagItem(item);
+}
+
+
 ContactItem::~ContactItem()
 {
 }
@@ -96,6 +103,11 @@ QString ContactItem::name() const
 	return d->feedbagItem.field<QString>(SsiBuddyNick);
 }
 
+void ContactItem::setName(const QString &name)
+{
+	d->feedbagItem.setField(SsiBuddyNick, name);
+}
+
 quint16 ContactItem::groupId() const
 {
 	return d->feedbagItem.groupId();
@@ -116,6 +128,16 @@ QString ContactItem::protocol() const
 QString ContactItem::comment() const
 {
 	return d->feedbagItem.field<QString>(SsiBuddyComment);
+}
+
+void ContactItem::setComment(const QString &comment)
+{
+	d->feedbagItem.setField(SsiBuddyComment, comment);
+}
+
+FeedbagItem &ContactItem::feedbagItem() const
+{
+	return d->feedbagItem;
 }
 
 StatusItem::StatusItem() :
