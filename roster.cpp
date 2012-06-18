@@ -290,7 +290,6 @@ bool Roster::handleFeedbagItem(Feedbag *feedbag, const FeedbagItem &item, Feedba
 
 void Roster::handleAddModifyCLItem(const FeedbagItem &item, Feedbag::ModifyType type)
 {
-	Q_UNUSED(type);
 	switch (item.type()) {
 	case SsiBuddy: {
 		if (item.name().isEmpty())

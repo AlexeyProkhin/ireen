@@ -515,37 +515,10 @@ void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, Fee
 	const QPair<quint16, quint16> id = item.pairId();
 	const bool hasError = (error.code() != FeedbagError::NoError);
 
-	if (hasError) {
-		if (type == Feedbag::Remove) {
-			item.d->isInList = true;
-		} else {
-			item.d->isInList = false;
-		}
-	} else {
-		if (type == Feedbag::Remove) {
-			item.d->isInList = false;
-			itemsById.remove(id);
-			if (item.type() == SsiGroup) {
-				root.regulars.remove(item.groupId());
-			} else {
-				FeedbagGroup *group = findGroup(item.groupId());
-				Q_ASSERT(!group->item.isNull());
-				group->hashByName.remove(item.pairName());
-			}
-		} else {
-			item.d->isInList = true;
-			itemsById.insert(id, item);
-			FeedbagGroup *group = findGroup(item.groupId());
-			if (item.type() == SsiGroup) {
-				group->item = item;
-				root.hashByName.insert(item.pairName(), item.groupId());
-			} else {
-				Q_ASSERT(!group->item.isNull());
-				group->hashByName.insert(item.pairName(), item.itemId());
-			}
-		}
-	}
-
+	if (hasError)
+		item.d->isInList = type == Feedbag::Remove;
+	else
+		item.d->isInList = type != Feedbag::Remove;
 
 	// Handle the item.
 	bool found = false;
@@ -573,6 +546,32 @@ void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, Fee
 			} else {
 				debug(DebugVerbose) << "The feedbag item has not been added:"
 							   << error.errorString() << ". (" << error.code() << ")" << item;
+			}
+		}
+	}
+
+	// Store the item into local copy.
+	// Notice that some handlers (like roster) relying on the operation
+	// being performed after the handlers are called.
+	if (!hasError) {
+		if (type == Feedbag::Remove) {
+			itemsById.remove(id);
+			if (item.type() == SsiGroup) {
+				root.regulars.remove(item.groupId());
+			} else {
+				FeedbagGroup *group = findGroup(item.groupId());
+				Q_ASSERT(!group->item.isNull());
+				group->hashByName.remove(item.pairName());
+			}
+		} else {
+			itemsById.insert(id, item);
+			FeedbagGroup *group = findGroup(item.groupId());
+			if (item.type() == SsiGroup) {
+				group->item = item;
+				root.hashByName.insert(item.pairName(), item.groupId());
+			} else {
+				Q_ASSERT(!group->item.isNull());
+				group->hashByName.insert(item.pairName(), item.itemId());
 			}
 		}
 	}
