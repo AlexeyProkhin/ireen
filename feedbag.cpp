@@ -253,7 +253,7 @@ void FeedbagItemPrivate::remove(FeedbagItem item)
 bool FeedbagItemPrivate::isSendingAllowed(const FeedbagItem &item, Feedbag::ModifyType operation)
 {
 	FeedbagPrivate *d = feedbag->d.data();
-	if (d->client->isConnected()) {
+	if (!d->client->isConnected()) {
 		warning() << "Trying to send the feedbag item while offline:" << item;
 		return false;
 	}

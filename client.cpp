@@ -76,8 +76,8 @@ Client::Client(const QString &uin, QObject *parent) :
 			<< SNACInfo(BosFamily, PrivacyRightsReply);
 
 	d->uin = uin;
-	d->status_flags = 0x0000;
-	d->is_idle = false;
+	d->statusFlags = 0x0000;
+	d->isIdle = false;
 
 	registerHandler(this);
 	registerHandler(d->feedbag = new Feedbag(this));
@@ -189,7 +189,7 @@ void Client::processCloseConnection()
 	//AbstractConnection::processCloseConnection();
 }
 
-QAbstractSocket::SocketState Client::state() const
+QAbstractSocket::SocketState Client::socketState() const
 {
 	Q_D(const Client);
 #if IREEN_USE_MD5_LOGIN
@@ -213,7 +213,7 @@ Status Client::status() const
 
 bool Client::isConnected()
 {
-	return d_func()->status.id() != Status::Offline;
+	return state() == AbstractConnection::Connected;
 }
 
 #if IREEN_USE_MD5_LOGIN
@@ -318,6 +318,8 @@ Feedbag *Client::feedbag() const
 
 void Client::onDisconnect()
 {
+	Q_D(Client);
+	d->status = Status::Offline;
 	AbstractConnection::onDisconnect();
 }
 
@@ -373,7 +375,7 @@ void Client::sendStatus(Status status)
 {
 	Q_D(Client);
 	SNAC snac(ServiceFamily, ServiceClientSetStatus);
-	snac.appendTLV<quint32>(0x06, (d->status_flags << 16) | status.id()); // Status mode and security flags
+	snac.appendTLV<quint32>(0x06, (d->statusFlags << 16) | status.id()); // Status mode and security flags
 	snac.appendTLV<quint16>(0x08, 0x0000); // Error code
 	// Status item
 	DataUnit statusData;
@@ -446,7 +448,7 @@ void Client::finishLogin()
 	Q_D(Client);
 	setState(Connected);
 	d->sendUserInfo(true);
-	d->is_idle = true;
+	d->isIdle = true;
 	setIdle(false);
 	SNAC snac(ServiceFamily, ServiceClientReady);
 	// imitate ICQ 6 behaviour
@@ -470,7 +472,7 @@ void Client::finishLogin()
 void Client::setIdle(bool allow)
 {
 	Q_D(Client);
-	if (d->is_idle == allow)
+	if (d->isIdle == allow)
 		return;
 	SNAC snac(ServiceFamily, 0x0011);
 	snac.append<quint32>(allow ? 0x0000003C : 0x00000000);

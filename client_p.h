@@ -49,8 +49,8 @@ public:
 	void connectToBOSS(const QString &host, quint16 port, const QByteArray &cookie);
 	void sendUserInfo(bool force = false);
 public:
-	bool is_idle;
-	quint16 status_flags;
+	bool isIdle;
+	quint16 statusFlags;
 	QString uin;
 	QHash<quint64, Cookie> cookies;
 	Status status;

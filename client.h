@@ -57,7 +57,7 @@ public:
 	void disconnectFromHost(bool force = false);
 	QString uin() const;
 	void sendStatus(Status status);
-	QAbstractSocket::SocketState state() const;
+	QAbstractSocket::SocketState socketState() const;
 	Status status() const;
 	bool isConnected();
 #if IREEN_USE_MD5_LOGIN
