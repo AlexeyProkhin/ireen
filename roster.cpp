@@ -135,6 +135,11 @@ void ContactItem::setComment(const QString &comment)
 	d->feedbagItem.setField(SsiBuddyComment, comment);
 }
 
+bool ContactItem::isAuthorizedBy() const
+{
+	return !d->feedbagItem.containsField(SsiBuddyReqAuth);
+}
+
 FeedbagItem &ContactItem::feedbagItem() const
 {
 	return d->feedbagItem;
@@ -267,7 +272,9 @@ Roster::Roster(Client *client)
 	m_infos << SNACInfo(ServiceFamily, ServiceServerAsksServices)
 			<< SNACInfo(BuddyFamily, UserOnline)
 			<< SNACInfo(BuddyFamily, UserOffline)
-			<< SNACInfo(BuddyFamily, UserSrvReplyBuddy);
+			<< SNACInfo(BuddyFamily, UserSrvReplyBuddy)
+			<< SNACInfo(ListsFamily, ListsAuthRequest)
+			<< SNACInfo(ListsFamily, ListsSrvAuthResponse);
 	m_types << SsiBuddy << SsiGroup;
 
 	client->registerHandler(this);
@@ -278,8 +285,18 @@ Roster::Roster(Client *client)
 bool Roster::handleFeedbagItem(Feedbag *feedbag, const FeedbagItem &item, Feedbag::ModifyType type, FeedbagError error)
 {
 	Q_UNUSED(feedbag);
-	if (error != FeedbagError::NoError)
+	if (type != Feedbag::Remove && error == FeedbagError::RequiresAuthorization) {
+		// Failed to add the contact because it requires authorization.
+		// Try to readd the contact with SsiBuddyReqAuth field present.
+		Q_ASSERT(!item.isInList());
+		FeedbagItem itemCopy = item;
+		itemCopy.setId(item.feedbag()->uniqueItemId(SsiBuddy));
+		itemCopy.setField(SsiBuddyReqAuth);
+		itemCopy.add();
+		return true;
+	} else if (error != FeedbagError::NoError) {
 		return false;
+	}
 
 	if (type == Feedbag::Remove)
 		handleRemoveCLItem(item);
@@ -290,6 +307,7 @@ bool Roster::handleFeedbagItem(Feedbag *feedbag, const FeedbagItem &item, Feedba
 
 void Roster::handleAddModifyCLItem(const FeedbagItem &item, Feedbag::ModifyType type)
 {
+	Q_UNUSED(type);
 	switch (item.type()) {
 	case SsiBuddy: {
 		if (item.name().isEmpty())
@@ -361,6 +379,25 @@ void Roster::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 	case BuddyFamily << 16 | UserSrvReplyBuddy:
 		debug() << IMPLEMENT_ME << "BuddyFamily, UserSrvReplyBuddy";
 		break;
+	case ListsFamily << 16 | ListsAuthRequest: {
+		QString uin = sn.read<QString, quint8>();
+		QString reason = sn.read<QString, qint16>();
+		debug() << QString("Authorization request from \"%1\" with reason \"%2").arg(uin).arg(reason);
+		emit authorizationRequestReceived(uin, reason);
+		break;
+	}
+	case ListsFamily << 16 | ListsSrvAuthResponse: {
+		QString uin = sn.read<QString, qint8>();
+		bool isAccepted = sn.read<qint8>();
+		QString reason = sn.read<QString, qint16>();
+		QString verb = isAccepted ? "accepted" : "declined";
+		debug() << QString("Our authorization request to \"%1\" has been %2 with reason \"%3")
+				   .arg(uin)
+				   .arg(verb)
+				   .arg(reason);
+		emit authorizationRequestReply(uin, isAccepted, reason);
+		break;
+	}
 	}
 }
 

@@ -30,6 +30,7 @@ set(SRC
     core/util.cpp
     core/xtraz.cpp
     core/messages.cpp
+    core/authorization.cpp
     buddypicture.cpp
     abstractconnection.cpp
     status.cpp
@@ -55,6 +56,7 @@ set(HDR
     core/util.h
     core/xtraz.h
     core/messages.h
+    core/authorization.h
     buddypicture.h
     abstractconnection.h
     abstractconnection_p.h

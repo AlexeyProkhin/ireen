@@ -57,6 +57,7 @@ public:
 	QString protocol() const;
 	QString comment() const;
 	void setComment(const QString &comment);
+	bool isAuthorizedBy() const;
 	FeedbagItem &feedbagItem() const;
 private:
 	friend class Roster;
@@ -103,6 +104,8 @@ signals:
 	void groupItemAdded(const QString &groupName);
 	void groupItemRenamed(const QString &newGroupName, const QString &oldGroupName);
 	void groupItemRemoved(const QString &groupName);
+	void authorizationRequestReceived(const QString &uin, const QString &reason);
+	void authorizationRequestReply(const QString &uin, bool isAccepted, const QString &reason);
 protected:
 	bool handleFeedbagItem(Feedbag *feedbag, const FeedbagItem &item, Feedbag::ModifyType type, FeedbagError error);
 	void handleAddModifyCLItem(const FeedbagItem &item, Feedbag::ModifyType type);
