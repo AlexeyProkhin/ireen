@@ -529,6 +529,7 @@ void AbstractConnection::onDisconnect()
 {
 	setState(Unconnected);
 	d_func()->aliveTimer.stop();
+	emit disconnected();
 }
 
 void AbstractConnection::onError(ConnectionError error)
@@ -744,10 +745,8 @@ void AbstractConnection::readData()
 void AbstractConnection::stateChanged(QAbstractSocket::SocketState state)
 {
 	debug(DebugVerbose) << "New connection state" << state << this->metaObject()->className();
-	if (state == QAbstractSocket::UnconnectedState) {
+	if (state == QAbstractSocket::UnconnectedState)
 		onDisconnect();
-		emit disconnected();
-	}
 }
 
 void AbstractConnection::error(QAbstractSocket::SocketError error)
