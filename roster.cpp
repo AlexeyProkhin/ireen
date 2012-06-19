@@ -56,6 +56,7 @@ public:
 	void setTlvs(const TLVMap &tlvs, bool online);
 private:
 	friend class StatusItem;
+	bool online;
 	quint16 statusId;
 	quint16 statusFlags;
 	TLVMap tlvs;
@@ -164,8 +165,9 @@ void StatusItem::operator=(const StatusItem &other)
 	d = other.d;
 }
 
-void StatusItemPrivate::setTlvs(const TLVMap &tlvs_, bool online)
+void StatusItemPrivate::setTlvs(const TLVMap &tlvs_, bool online_)
 {
+	online = online_;
 	tlvs = tlvs_;
 	if (online && tlvs.contains(0x06)) {
 		DataUnit data(tlvs.value(0x06));
@@ -248,7 +250,7 @@ QDateTime StatusItem::awaySince() const
 {
 	if (d->tlvs.contains(0x0004))
 		return QDateTime::currentDateTime().addSecs(-60 * d->tlvs.value<quint32>(0x0004));
-	else if (d->statusId != Status::Online)
+	else if (d->statusId != Status::Online && d->online)
 		return QDateTime::currentDateTime();
 	else
 		return QDateTime();
