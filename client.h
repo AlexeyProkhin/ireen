@@ -89,6 +89,7 @@ private:
 private:
 	friend class Cookie;
 	friend class Md5Login;
+	friend class Feedbag;
 };
 
 } // namespace Ireen

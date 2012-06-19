@@ -29,6 +29,7 @@
 
 #include "abstractconnection_p.h"
 #include "capability.h"
+#include "feedbag.h"
 
 #if IREEN_USE_MD5_LOGIN
 #include "md5login.h"
@@ -48,6 +49,7 @@ public:
 	void finishLogin();
 	void connectToBOSS(const QString &host, quint16 port, const QByteArray &cookie);
 	void sendUserInfo(bool force = false);
+	void setFeedbag(Feedbag *feedbag);
 public:
 	bool isIdle;
 	quint16 statusFlags;

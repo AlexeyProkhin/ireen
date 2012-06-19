@@ -68,6 +68,13 @@ void ClientPrivate::connectToBOSS(const QString &host, quint16 port, const QByte
 	}
 }
 
+void ClientPrivate::setFeedbag(Feedbag *feedbag_)
+{
+	Q_ASSERT(!feedbag);
+	q->registerHandler(feedbag = feedbag_);
+	q->connect(feedbag, SIGNAL(loaded()), SLOT(finishLogin()));
+}
+
 Client::Client(const QString &uin, QObject *parent) :
 	AbstractConnection(new ClientPrivate(this), parent)
 {
@@ -78,14 +85,12 @@ Client::Client(const QString &uin, QObject *parent) :
 	d->uin = uin;
 	d->statusFlags = 0x0000;
 	d->isIdle = false;
+	d->feedbag = 0;
 
 	registerHandler(this);
-	registerHandler(d->feedbag = new Feedbag(this));
 
 	registerInitializationSnac(LocationFamily, LocationCliReqRights);
 	registerInitializationSnac(BosFamily, PrivacyReqRights);
-
-	connect(d->feedbag, SIGNAL(loaded()), this, SLOT(finishLogin()));
 
 	// ICQ UTF8 Support
 	d->caps.append(ICQ_CAPABILITY_UTF8);
@@ -415,6 +420,7 @@ void Client::sendStatus(Status status)
 
 void Client::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 {
+	Q_D(Client);
 	Q_UNUSED(conn);
 	Q_ASSERT(this == conn);
 	AbstractConnection::handleSNAC(this, sn);
@@ -438,6 +444,8 @@ void Client::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 	}
 	// Server sends PRM service limitations to client
 	case BosFamily << 16 | PrivacyRightsReply: {
+		if (!d->feedbag)
+			finishLogin();
 		break;
 	}
 	}

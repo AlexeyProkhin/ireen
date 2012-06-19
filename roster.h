@@ -96,7 +96,7 @@ class IREEN_EXPORT Roster : public QObject, public SNACHandler, public FeedbagIt
 	Q_OBJECT
 	Q_INTERFACES(Ireen::SNACHandler Ireen::FeedbagItemHandler)
 public:
-	Roster(Client *client);
+	Roster(Client *client, Feedbag *feedbag);
 signals:
 	void contactItemReceived(const Ireen::ContactItem &item);
 	void contactStatusUpdated(const QString &uin, const Ireen::StatusItem &item);

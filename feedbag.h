@@ -150,15 +150,14 @@ public:
 
 	Feedbag(Client *client);
 	virtual ~Feedbag();
-
-	bool event(QEvent *event);
+	void setCache(const QList<FeedbagItem> &cache);
+	QList<FeedbagItem> allItems() const;
 
 	bool removeItem(quint16 type, quint16 id);
 	bool removeItem(quint16 type, const QString &name);
 
 	FeedbagItem buddyForChange(const QString &uin) const;
 	FeedbagItem itemByType(quint16 type, ItemLoadFlags flags = NoFlags) const;
-
 
 	FeedbagItem item(quint16 type, quint16 id, quint16 group, ItemLoadFlags flags = NoFlags) const;
 	FeedbagItem item(quint16 type, const QString &name, quint16 group, ItemLoadFlags flags = NoFlags) const;
@@ -174,12 +173,16 @@ public:
 	quint16 uniqueItemId(quint16 type) const;
 
 	void registerHandler(FeedbagItemHandler *handler);
-	Client *connection() const;
+	Client *client() const;
 signals:
 	void loaded();
 	void reloadingStarted();
+	void itemAdded(const Ireen::FeedbagItem &item);
+	void itemUpdated(const Ireen::FeedbagItem &item);
+	void itemRemoved(const Ireen::FeedbagItem &item);
 protected:
 	virtual void handleSNAC(AbstractConnection *conn, const SNAC &snac);
+	bool event(QEvent *event);
 private slots:
 	void onDisconnected();
 private:
@@ -210,6 +213,7 @@ private:
 IREEN_EXPORT QDebug &operator<<(QDebug &stream, const Ireen::FeedbagItem &item);
 IREEN_EXPORT QDebug &operator<<(QDebug &stream, Ireen::Feedbag::ModifyType type);
 Q_DECLARE_INTERFACE(Ireen::FeedbagItemHandler, "org.qutim.ireen.FeedbagItemHandler")
+Q_DECLARE_METATYPE(Ireen::FeedbagItem)
 
 #endif // IREEN_FEEDBAG_H
 

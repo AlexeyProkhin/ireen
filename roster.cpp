@@ -63,6 +63,12 @@ private:
 	SessionDataItemMap statusData;
 };
 
+class RosterPrivate
+{
+public:
+	Feedbag *feedbag;
+};
+
 ContactItem::ContactItem() :
 	d(new ContactItemPrivate)
 {
@@ -269,7 +275,7 @@ SessionDataItemMap StatusItem::statusData() const
 	return d->statusData;
 }
 
-Roster::Roster(Client *client)
+Roster::Roster(Client *client, Feedbag *feedbag)
 {
 	m_infos << SNACInfo(ServiceFamily, ServiceServerAsksServices)
 			<< SNACInfo(BuddyFamily, UserOnline)
@@ -280,7 +286,7 @@ Roster::Roster(Client *client)
 	m_types << SsiBuddy << SsiGroup;
 
 	client->registerHandler(this);
-	client->feedbag()->registerHandler(this);
+	feedbag->registerHandler(this);
 	client->registerInitializationSnac(BuddyFamily, UserCliReqBuddy);
 }
 
@@ -321,6 +327,8 @@ void Roster::handleAddModifyCLItem(const FeedbagItem &item, Feedbag::ModifyType 
 		break;
 	}
 	case SsiGroup: {
+		if (item.groupId() == 0) // Skip Root group
+			break;
 		FeedbagItem old = item.feedbag()->groupItem(item.groupId());
 		if (old.isInList()) {
 			if (old.name() != item.name()) {
@@ -346,6 +354,8 @@ void Roster::handleRemoveCLItem(const FeedbagItem &item)
 		break;
 	}
 	case SsiGroup: {
+		if (item.groupId() == 0) // Skip Root group
+			break;
 		debug(DebugVerbose) << "The group" << item.name() << "has been removed";
 		emit groupItemRemoved(item.name());
 		break;

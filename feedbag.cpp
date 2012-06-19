@@ -26,14 +26,12 @@
 
 #include "feedbag.h"
 #include "snac.h"
-#include "client.h"
+#include "client_p.h"
 
 #include <QCoreApplication>
 #include <QQueue>
 #include <QDateTime>
 #include <QLatin1String>
-
-Q_DECLARE_METATYPE(Ireen::FeedbagItem)
 
 namespace Ireen {
 
@@ -124,6 +122,7 @@ class FeedbagPrivate
 public:
 	FeedbagPrivate(Client *client_, Feedbag *q)
 		: client(client_), q_ptr(q) {}
+	QList<FeedbagItemHandler*> handlersForItem(const FeedbagItem &item);
 	void handleItem(FeedbagItem &item, Feedbag::ModifyType type, FeedbagError error);
 	FeedbagGroup *findGroup(quint16 id);
 	quint16 generateId() const;
@@ -131,7 +130,7 @@ public:
 	static QEvent::Type updateEvent();
 	FeedbagItemPrivate *getFeedbagItemPrivate(const SNAC &snac);
 	void updateList();
-	void updateFeedbagList();
+	void updateLocalCache();
 
 	AllItemsHash itemsById;
 	QHash<quint16, QSet<quint16> > itemsByType;
@@ -505,6 +504,14 @@ static bool handlerLessThan(FeedbagItemHandler *lhs, FeedbagItemHandler *rhs)
 	return lhs->priority() > rhs->priority();
 }
 
+QList<FeedbagItemHandler*> FeedbagPrivate::handlersForItem(const FeedbagItem &item)
+{
+	QList<FeedbagItemHandler*> suitableHandlers = handlers.values(item.type());
+	if (suitableHandlers.count() > 1)
+		qSort(suitableHandlers.begin(), suitableHandlers.end(), &handlerLessThan);
+	return suitableHandlers;
+}
+
 void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, FeedbagError error)
 {
 	Q_Q(Feedbag);
@@ -522,10 +529,7 @@ void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, Fee
 
 	// Handle the item.
 	bool found = false;
-	QList<FeedbagItemHandler*> suitableHandlers = handlers.values(item.type());
-	if (suitableHandlers.count() > 1)
-		qSort(suitableHandlers.begin(), suitableHandlers.end(), &handlerLessThan);
-	foreach (FeedbagItemHandler *handler, suitableHandlers)
+	foreach (FeedbagItemHandler *handler, handlersForItem(item))
 		found |= handler->handleFeedbagItem(q, item, type, error);
 	if (!found) {
 		if (error == FeedbagError::NoError) {
@@ -563,6 +567,7 @@ void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, Fee
 				Q_ASSERT(!group->item.isNull());
 				group->hashByName.remove(item.pairName());
 			}
+			emit q->itemRemoved(item);
 		} else {
 			itemsById.insert(id, item);
 			FeedbagGroup *group = findGroup(item.groupId());
@@ -573,6 +578,10 @@ void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, Fee
 				Q_ASSERT(!group->item.isNull());
 				group->hashByName.insert(item.pairName(), item.itemId());
 			}
+			if (type == Feedbag::Modify)
+				q->itemUpdated(item);
+			else
+				q->itemAdded(item);
 		}
 	}
 }
@@ -651,7 +660,7 @@ void FeedbagPrivate::updateList()
 	modifyQueue.clear();
 }
 
-void FeedbagPrivate::updateFeedbagList()
+void FeedbagPrivate::updateLocalCache()
 {
 	QList<FeedbagItem> upToDateItems;
 	qSwap(newItems, upToDateItems);
@@ -692,10 +701,42 @@ Feedbag::Feedbag(Client *client):
 	client->registerInitializationSnacs(m_initSnacs);
 
 	connect(client, SIGNAL(disconnected()), SLOT(onDisconnected()));
+	client->d_func()->setFeedbag(this);
 }
 
 Feedbag::~Feedbag()
 {
+}
+
+void Feedbag::setCache(const QList<FeedbagItem> &cache)
+{
+	Q_ASSERT(d->itemsById.isEmpty());
+	foreach (FeedbagItem item, cache) {
+		item.d->feedbag = this;
+		d->itemsById.insert(item.pairId(), item);
+		d->itemsByType[item.type()].insert(item.d->id());
+		FeedbagGroup *group = d->findGroup(item.groupId());
+		if (item.type() == SsiGroup) {
+			group->item = item;
+			d->root.hashByName.insert(item.pairName(), item.groupId());
+			foreach (FeedbagItemHandler *handler, d->handlersForItem(item))
+				handler->handleFeedbagItem(this, item, AddModify, FeedbagError::NoError);
+		} else {
+			group->hashByName.insert(item.pairName(), item.itemId());
+		}
+	}
+
+	foreach (const FeedbagItem &item, d->itemsById) {
+		if (item.type() == SsiGroup)
+			continue;
+		foreach (FeedbagItemHandler *handler, d->handlersForItem(item))
+			handler->handleFeedbagItem(this, item, AddModify, FeedbagError::NoError);
+	}
+}
+
+QList<FeedbagItem> Feedbag::allItems() const
+{
+	return d->itemsById.values();
 }
 
 bool Feedbag::event(QEvent *ev)
@@ -911,7 +952,7 @@ void Feedbag::registerHandler(FeedbagItemHandler *handler)
 	}
 }
 
-Client *Feedbag::connection() const
+Client *Feedbag::client() const
 {
 	return d->client;
 }
@@ -973,7 +1014,7 @@ void Feedbag::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 		if (isLast) {
 			d->firstPacket = true;
 			d->lastUpdateTime = sn.read<quint32>();
-			d->updateFeedbagList();
+			d->updateLocalCache();
 			d->finishLoading();
 		}
 		break;
@@ -1071,4 +1112,13 @@ QDebug &operator<<(QDebug &stream, const Ireen::FeedbagItem &item)
 	stream.nospace() << ")";
 	return stream;
 }
+
+struct Ctor
+{
+	Ctor()
+	{
+		qRegisterMetaTypeStreamOperators<Ireen::FeedbagItem>("qutim_sdk_0_3::oscar::FeedbagItem");
+	}
+};
+static Ctor ctor;
 
