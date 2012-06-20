@@ -38,8 +38,8 @@ set(SRC
     client.cpp
     roster.cpp
     messagehandler.cpp
+    privacylists.cpp
 )
-
 
 # Library headers
 set(HDR
@@ -66,6 +66,7 @@ set(HDR
     client_p.h
     roster.h
     messagehandler.h
+    privacylists.h
 )
 
 # Add login class implementation

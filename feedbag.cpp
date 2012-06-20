@@ -721,6 +721,7 @@ void Feedbag::setCache(const QList<FeedbagItem> &cache)
 	Q_ASSERT(d->itemsById.isEmpty());
 	foreach (FeedbagItem item, cache) {
 		item.d->feedbag = this;
+		item.d->isInList = true;
 		d->itemsById.insert(item.pairId(), item);
 		d->itemsByType[item.type()].insert(item.d->id());
 		FeedbagGroup *group = d->findGroup(item.groupId());
