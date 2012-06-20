@@ -527,6 +527,14 @@ void FeedbagPrivate::handleItem(FeedbagItem &item, Feedbag::ModifyType type, Fee
 	else
 		item.d->isInList = type != Feedbag::Remove;
 
+	// If a group has been removed, remove its subitems first
+	if (type == Feedbag::Remove && item.type() == SsiGroup && !hasError) {
+		foreach (FeedbagItem subitem, itemsById) {
+			if (subitem.type() != SsiGroup && subitem.groupId() == item.groupId())
+				handleItem(subitem, type, error);
+		}
+	}
+
 	// Handle the item.
 	bool found = false;
 	foreach (FeedbagItemHandler *handler, handlersForItem(item))
