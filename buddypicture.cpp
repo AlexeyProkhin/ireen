@@ -64,6 +64,7 @@ BuddyPictureHandler::BuddyPictureHandler(Client *client, Roster *roster) :
 
 	socket()->setProxy(d->client->socket()->proxy());
 	registerHandler(this);
+	d->client->registerHandler(this);
 	d->client->feedbag()->registerHandler(this);
 
 	connect(roster, SIGNAL(contactStatusUpdated(QString,Ireen::StatusItem)),
@@ -250,7 +251,7 @@ void BuddyPictureHandler::onDisconnect()
 	AbstractConnection::onDisconnect();
 }
 
-void BuddyPictureHandler::updateAvatar(const QString &uin, const QString &hash, quint16 id, quint16 flags)
+void BuddyPictureHandler::updateAvatar(const QString &uin, const QByteArray &hash, quint16 id, quint16 flags)
 {
 	if (hash != emptyHash) {
 		BuddyPicture picture = { hash, id, flags };

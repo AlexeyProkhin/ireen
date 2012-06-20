@@ -52,7 +52,7 @@ enum IconItemType
 
 struct IREEN_EXPORT BuddyPicture
 {
-	QString hash;
+	QByteArray hash;
 	quint16 id;
 	quint16 flags;
 };
@@ -69,7 +69,7 @@ public:
 	void uploadAccountAvatar(const QString &avatar);
 signals:
 	void avatarReceived(const QString &uin, const QByteArray &hash, const QByteArray &avatar);
-	void avatarUpdated(const QString &uin, const BuddyPicture &avatar);
+	void avatarUpdated(const QString &uin, const Ireen::BuddyPicture &avatar);
 	void avatarRemoved(const QString &uin);
 protected:
 	void handleSNAC(AbstractConnection *conn, const SNAC &snac);
@@ -81,7 +81,7 @@ protected:
 private slots:
 	void statusChanged(const QString &uin, const Ireen::StatusItem &status);
 private:
-	void updateAvatar(const QString &uin, const QString &hash, quint16 id, quint16 flags);
+	void updateAvatar(const QString &uin, const QByteArray &hash, quint16 id, quint16 flags);
 };
 
 } // namespace Ireen
