@@ -26,51 +26,10 @@
 
 #include "util.h"
 #include <QCoreApplication>
-#include <k8json/k8json.h>
 
 namespace Ireen {
 
 namespace Util {
-
-static QTextCodec *_asciiCodec;
-
-class CodecWrapper : public QTextCodec
-{
-public:
-	inline CodecWrapper() {}
-protected:
-	QByteArray name() const { return utf8Codec()->name() + " wrapper"; }
-
-	QString convertToUnicode(const char *chars, int len, ConverterState *state) const
-	{
-		if (K8JSON::isValidUtf8(reinterpret_cast<const uchar*>(chars), len, false))
-			return utf8Codec()->toUnicode(chars, len, state);
-		else
-			return _asciiCodec->toUnicode(chars, len, state);
-	}
-
-	QByteArray convertFromUnicode(const QChar *input, int number, ConverterState *state) const
-	{
-		return utf8Codec()->fromUnicode(input, number, state);
-	}
-
-	int mibEnum() const { return utf8Codec()->mibEnum(); }
-};
-
-Q_GLOBAL_STATIC(CodecWrapper, codecWrapper)
-
-extern QTextCodec *asciiCodec()
-{
-	if (!_asciiCodec)
-		_asciiCodec = QTextCodec::codecForLocale();
-	return _asciiCodec;
-}
-
-extern void setAsciiCodec(QTextCodec *codec)
-{
-	Q_ASSERT(codec);
-	_asciiCodec = codec;
-}
 
 extern QTextCodec *utf8Codec()
 {
@@ -87,11 +46,6 @@ extern QTextCodec *utf16Codec()
 extern QTextCodec *defaultCodec()
 {
 	return utf8Codec();
-}
-
-extern QTextCodec *detectCodec()
-{
-	return codecWrapper();
 }
 
 } } // namespace Ireen::Util

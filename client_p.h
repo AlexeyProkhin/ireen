@@ -30,6 +30,7 @@
 #include "abstractconnection_p.h"
 #include "capability.h"
 #include "feedbag.h"
+#include <k8json/k8json.h>
 
 #if IREEN_USE_MD5_LOGIN
 #include "md5login.h"
@@ -38,6 +39,32 @@
 #endif
 
 namespace Ireen {
+
+class DetectCodec : public QTextCodec
+{
+public:
+	inline DetectCodec(QTextCodec **asciiCodec) : m_asciiCodec(asciiCodec) {}
+protected:
+	QByteArray name() const { return Util::utf8Codec()->name() + " wrapper"; }
+
+	QString convertToUnicode(const char *chars, int len, ConverterState *state) const
+	{
+		if (K8JSON::isValidUtf8(reinterpret_cast<const uchar*>(chars), len, false))
+			return Util::utf8Codec()->toUnicode(chars, len, state);
+		else
+			return (*m_asciiCodec)->toUnicode(chars, len, state);
+	}
+
+	QByteArray convertFromUnicode(const QChar *input, int number, ConverterState *state) const
+	{
+		return Util::utf8Codec()->fromUnicode(input, number, state);
+	}
+
+	int mibEnum() const { return Util::utf8Codec()->mibEnum(); }
+private:
+	QTextCodec **m_asciiCodec;
+};
+
 
 class ClientPrivate : public AbstractConnectionPrivate
 {
@@ -61,6 +88,8 @@ public:
 	QHash<QString, Capability> typedCaps;
 	Feedbag *feedbag;
 	Client *q;
+	QTextCodec *asciiCodec;
+	DetectCodec *detectCodec;
 #if IREEN_USE_MD5_LOGIN
 	Pointer<Md5Login> auth;
 	QString loginServer;

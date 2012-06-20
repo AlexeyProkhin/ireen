@@ -85,9 +85,9 @@ enum MTN
 class IREEN_EXPORT Channel1MessageData: public DataUnit
 {
 public:
-	Channel1MessageData(const QString &message, Channel1Codec charset = CodecUtf16Be);
+	Channel1MessageData(const QString &message, QTextCodec *codec = Util::utf16Codec());
 	Channel1MessageData(const QByteArray &message, Channel1Codec charset = CodecUtf16Be);
-	static QByteArray fromUnicode(const QString &message, Channel1Codec charset = CodecUtf16Be);
+	static QByteArray fromUnicode(const QString &message, QTextCodec *codec = Util::utf16Codec());
 private:
 	void init(const QByteArray &message, Channel1Codec charset);
 };
@@ -117,7 +117,7 @@ class IREEN_EXPORT Channel2MessageData: public Channel2BasicMessageData
 public:
 	Channel2MessageData(quint16 ackType, const Tlv2711 &data);
 	Channel2MessageData(const QByteArray &message, bool utf8 = true, const Cookie &cookie = Cookie(true));
-	Channel2MessageData(const QString &message, bool utf8 = true, const Cookie &cookie = Cookie(true));
+	Channel2MessageData(const QString &message, QTextCodec *codec = Util::utf8Codec(), const Cookie &cookie = Cookie(true));
 protected:
 	void init(quint16 ackType, const Tlv2711 &data);
 	void init(const QByteArray &message, bool utf8 = true, const Cookie &cookie = Cookie(true));

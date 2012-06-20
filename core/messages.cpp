@@ -31,9 +31,11 @@ namespace Ireen {
 
 using namespace Util;
 
-Channel1MessageData::Channel1MessageData(const QString &message, Channel1Codec charset)
+Channel1MessageData::Channel1MessageData(const QString &message, QTextCodec *codec)
 {
-	init(fromUnicode(message, charset), charset);
+	Q_ASSERT(codec != Util::utf8Codec());
+	Channel1Codec charset = codec == Util::utf16Codec() ? CodecAnsi : CodecUtf16Be;
+	init(fromUnicode(message, codec), charset);
 }
 
 Channel1MessageData::Channel1MessageData(const QByteArray &message, Channel1Codec charset)
@@ -41,15 +43,10 @@ Channel1MessageData::Channel1MessageData(const QByteArray &message, Channel1Code
 	init(message, charset);
 }
 
-QByteArray Channel1MessageData::fromUnicode(const QString &message, Channel1Codec charset)
+QByteArray Channel1MessageData::fromUnicode(const QString &message, QTextCodec *codec)
 {
-	QTextCodec *codec = 0;
-	if (charset == CodecUtf16Be)
-		codec = utf16Codec();
-	else
-		codec = asciiCodec();
 	QByteArray data = codec->fromUnicode(message);
-	if (charset == CodecUtf16Be)
+	if (codec == Util::utf16Codec())
 		data = data.mid(2); // Remove BOM which are shown by some clients as an unknown symbol
 	return data;
 }
@@ -118,16 +115,10 @@ Channel2MessageData::Channel2MessageData(const QByteArray &message, bool utf8, c
 	init(message, utf8, cookie);
 }
 
-Channel2MessageData::Channel2MessageData(const QString &message, bool utf8, const Cookie &cookie) :
+Channel2MessageData::Channel2MessageData(const QString &message, QTextCodec *codec, const Cookie &cookie) :
 	Channel2BasicMessageData(0, ICQ_CAPABILITY_SRVxRELAY, cookie)
 {
-	QTextCodec *codec;
-	if (utf8)
-		codec = utf8Codec();
-	else
-		codec = asciiCodec();
-	Q_ASSERT(codec);
-	init(codec->fromUnicode(message), utf8, cookie);
+	init(codec->fromUnicode(message), codec == Util::utf8Codec(), cookie);
 }
 
 void Channel2MessageData::init(quint16 ackType, const Tlv2711 &data)

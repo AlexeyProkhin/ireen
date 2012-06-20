@@ -55,12 +55,9 @@ inline QByteArray toLittleEndian(T source)
 	return data;
 }
 
-IREEN_EXPORT QTextCodec *asciiCodec();
-extern void setAsciiCodec(QTextCodec *codec);
 IREEN_EXPORT QTextCodec *utf8Codec();
 IREEN_EXPORT QTextCodec *utf16Codec();
 IREEN_EXPORT QTextCodec *defaultCodec();
-IREEN_EXPORT QTextCodec *detectCodec();
 
 } } // namespace Ireen::Util
 

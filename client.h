@@ -72,6 +72,9 @@ public:
 	bool containsCapability(const QString &type) const;
 	QList<Capability> capabilities() const;
 	Feedbag *feedbag() const;
+	QTextCodec *asciiCodec() const;
+	void setAsciiCodec(QTextCodec *codec);
+	QTextCodec *detectCodec() const;
 signals:
 	void loginFinished();
 protected:

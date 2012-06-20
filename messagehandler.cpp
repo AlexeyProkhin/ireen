@@ -270,9 +270,9 @@ QString MessageHandlerPrivate::handleChannel1Message(const QString &uin, const T
 			if (charset == CodecUtf16Be)
 				codec = Util::utf16Codec();
 			else if (detectCodec)
-				codec = Util::detectCodec();
+				codec = client->detectCodec();
 			else
-				codec = Util::asciiCodec();
+				codec = client->asciiCodec();
 			message += codec->toUnicode(data);
 		}
 	} else {
@@ -401,9 +401,9 @@ QString MessageHandlerPrivate::handleTlv2711(const DataUnit &data, const QString
 			}
 			if (codec == NULL) {
 				if (detectCodec)
-					codec = Util::detectCodec();
+					codec = client->detectCodec();
 				else
-					codec = Util::asciiCodec();
+					codec = client->asciiCodec();
 			}
 			QString message = codec->toUnicode(message_data);
 			debug(DebugVerbose) << "New message has been received on channel 2:" << message;

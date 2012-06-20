@@ -139,7 +139,7 @@ void Md5Login::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 		snac.appendTLV<QByteArray>(0x0001, m_client->uin().toUtf8());
 		{
 			quint32 length = qFromBigEndian<quint32>((uchar *) sn.data().constData());
-			QByteArray password = Util::asciiCodec()->fromUnicode(m_password);
+			QByteArray password = m_client->asciiCodec()->fromUnicode(m_password);
 			QByteArray key = sn.data().mid(2, length);
 			key += QCryptographicHash::hash(password, QCryptographicHash::Md5);
 			key += "AOL Instant Messenger (SM)";
