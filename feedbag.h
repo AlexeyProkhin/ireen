@@ -114,6 +114,9 @@ private:
 	QSharedDataPointer<FeedbagItemPrivate> d;
 };
 
+IREEN_EXPORT QDataStream &operator<<(QDataStream &out, const FeedbagItem &item);
+IREEN_EXPORT QDataStream &operator>>(QDataStream &in, FeedbagItem &item);
+
 template<typename T>
 Q_INLINE_TEMPLATE T FeedbagItem::field(quint16 f, const T &def) const
 {

@@ -33,6 +33,8 @@
 #include <QDateTime>
 #include <QLatin1String>
 
+Q_DECLARE_METATYPE(Ireen::FeedbagItem)
+
 namespace Ireen {
 
 QString getCompressedName(quint16 type, const QString &name)
@@ -690,7 +692,7 @@ void FeedbagPrivate::updateLocalCache()
 Feedbag::Feedbag(Client *client):
 	QObject(client), d(new FeedbagPrivate(client, this))
 {
-	qRegisterMetaTypeStreamOperators<Ireen::FeedbagItem>("Ireen::FeedbagItem");
+	//qRegisterMetaTypeStreamOperators<Ireen::FeedbagItem>("Ireen::FeedbagItem");
 
 	m_infos << SNACInfo(ListsFamily, ListsError)
 			<< SNACInfo(ServiceFamily, ServiceServerAsksServices)
