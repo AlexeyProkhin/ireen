@@ -28,7 +28,7 @@
 #define IREEN_BUDDYPICTURE_H
 
 #include "client.h"
-#include "snachandler.h"
+#include "core/snachandler.h"
 #include "feedbag.h"
 
 namespace Ireen {

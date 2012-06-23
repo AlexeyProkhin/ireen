@@ -98,7 +98,7 @@ void Md5Login::hostFound(const QHostInfo &host)
 {
 	m_hostReqId = 0;
 	if (!host.addresses().isEmpty()) {
-		quint16 loginPort = m_loginPort ? 5190 : m_loginPort;
+		quint16 loginPort = m_loginPort == 0 ? 5190 : m_loginPort;
 		socket()->connectToHost(host.addresses().at(qrand() % host.addresses().size()), loginPort);
 	} else {
 		setError(HostNotFound, tr("No IP addresses were found for the host '%1'").arg(m_loginServer));

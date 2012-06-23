@@ -28,8 +28,8 @@
 #define IREEN_FEEDBAG_H
 
 #include "ireen_global.h"
-#include "snachandler.h"
-#include "tlv.h"
+#include "core/snachandler.h"
+#include "core/tlv.h"
 #include <QSharedData>
 
 namespace Ireen {
@@ -133,7 +133,6 @@ class IREEN_EXPORT Feedbag : public QObject, public SNACHandler
 public:
 	enum ModifyType {
 		Add = ListsAddToList,
-		AddModify = ListsList,
 		Modify = ListsUpdateGroup,
 		Remove =  ListsRemoveFromList
 	};
@@ -213,7 +212,6 @@ private:
 IREEN_EXPORT QDebug &operator<<(QDebug &stream, const Ireen::FeedbagItem &item);
 IREEN_EXPORT QDebug &operator<<(QDebug &stream, Ireen::Feedbag::ModifyType type);
 Q_DECLARE_INTERFACE(Ireen::FeedbagItemHandler, "org.qutim.ireen.FeedbagItemHandler")
-Q_DECLARE_METATYPE(Ireen::FeedbagItem)
 
 #endif // IREEN_FEEDBAG_H
 

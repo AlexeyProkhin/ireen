@@ -27,7 +27,7 @@
 #ifndef IREEN_STATUS_H
 #define IREEN_STATUS_H
 
-#include "capability.h"
+#include "core/capability.h"
 
 namespace Ireen {
 

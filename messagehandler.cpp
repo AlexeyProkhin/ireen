@@ -73,6 +73,15 @@ MessageHandlerPrivate::MessageHandlerPrivate(MessageHandler *q_ptr, Client *clie
 	q->connect(client, SIGNAL(loginFinished()), SLOT(loginFinished()));
 }
 
+MessagePlugin::~MessagePlugin()
+{
+}
+
+
+Tlv2711Plugin::~Tlv2711Plugin()
+{
+}
+
 MessageHandler::MessageHandler(Client *client) :
 	d(new MessageHandlerPrivate(this, client))
 {

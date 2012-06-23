@@ -315,7 +315,6 @@ bool Roster::handleFeedbagItem(Feedbag *feedbag, const FeedbagItem &item, Feedba
 
 void Roster::handleAddModifyCLItem(const FeedbagItem &item, Feedbag::ModifyType type)
 {
-	Q_UNUSED(type);
 	switch (item.type()) {
 	case SsiBuddy: {
 		if (item.name().isEmpty())
@@ -329,8 +328,8 @@ void Roster::handleAddModifyCLItem(const FeedbagItem &item, Feedbag::ModifyType 
 	case SsiGroup: {
 		if (item.groupId() == 0) // Skip Root group
 			break;
-		FeedbagItem old = item.feedbag()->groupItem(item.groupId());
-		if (old.isInList()) {
+		if (type == Feedbag::Modify) {
+			FeedbagItem old = item.feedbag()->groupItem(item.groupId());
 			if (old.name() != item.name()) {
 				debug(DebugVerbose) << "The group" << old.name() << "has been renamed to" << item.name();
 				emit groupItemRenamed(item.name(), old.name());

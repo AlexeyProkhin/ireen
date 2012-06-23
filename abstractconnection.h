@@ -46,8 +46,8 @@
 
 #include <QMap>
 #include <QHostAddress>
-#include "snachandler.h"
-#include "flap.h"
+#include "core/snachandler.h"
+#include "core/flap.h"
 
 namespace Ireen {
 

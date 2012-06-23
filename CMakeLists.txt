@@ -81,6 +81,10 @@ endif()
 
 # Build k8json
 if (NOT IREEN_USE_EXTERNAL_K8JSON)
+    set(K8JSON_BUILD_STATIC_LIBRARY ON)
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        set(K8JSON_CXX_FLAGS -fPIC)
+    endif()
     add_subdirectory(3rdparty/k8json)
 endif()
 LIST(APPEND EXTRA_LIBS k8json)

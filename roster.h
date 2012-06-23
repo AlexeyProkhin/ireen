@@ -27,7 +27,7 @@
 #ifndef IREEN_ROSTER_H
 #define IREEN_ROSTER_H
 
-#include "capability.h"
+#include "core/capability.h"
 
 #include <QExplicitlySharedDataPointer>
 #include <QDateTime>

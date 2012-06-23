@@ -673,7 +673,7 @@ void FeedbagPrivate::updateLocalCache()
 	QList<FeedbagItem> upToDateItems;
 	qSwap(newItems, upToDateItems);
 	AllItemsHash allItems;
-	qSwap(allItems, itemsById);
+	allItems = itemsById;
 	itemsById.reserve(upToDateItems.size());
 	const FeedbagError noError(FeedbagError::NoError);
 	foreach (FeedbagItem item, upToDateItems) {
@@ -690,6 +690,8 @@ void FeedbagPrivate::updateLocalCache()
 Feedbag::Feedbag(Client *client):
 	QObject(client), d(new FeedbagPrivate(client, this))
 {
+	qRegisterMetaTypeStreamOperators<Ireen::FeedbagItem>("Ireen::FeedbagItem");
+
 	m_infos << SNACInfo(ListsFamily, ListsError)
 			<< SNACInfo(ServiceFamily, ServiceServerAsksServices)
 			<< SNACInfo(ListsFamily, ListsUpToDate)
@@ -729,7 +731,7 @@ void Feedbag::setCache(const QList<FeedbagItem> &cache)
 			group->item = item;
 			d->root.hashByName.insert(item.pairName(), item.groupId());
 			foreach (FeedbagItemHandler *handler, d->handlersForItem(item))
-				handler->handleFeedbagItem(this, item, AddModify, FeedbagError::NoError);
+				handler->handleFeedbagItem(this, item, Add, FeedbagError::NoError);
 		} else {
 			group->hashByName.insert(item.pairName(), item.itemId());
 		}
@@ -739,7 +741,7 @@ void Feedbag::setCache(const QList<FeedbagItem> &cache)
 		if (item.type() == SsiGroup)
 			continue;
 		foreach (FeedbagItemHandler *handler, d->handlersForItem(item))
-			handler->handleFeedbagItem(this, item, AddModify, FeedbagError::NoError);
+			handler->handleFeedbagItem(this, item, Add, FeedbagError::NoError);
 	}
 }
 
@@ -949,14 +951,14 @@ void Feedbag::registerHandler(FeedbagItemHandler *handler)
 		foreach (quint16 id, d->itemsByType.value(SsiGroup)) {
 			const FeedbagItem item = d->itemsById.value(qMakePair(quint16(SsiGroup), id));
 			if (types.contains(item.type()))
-				handler->handleFeedbagItem(this, item, AddModify, FeedbagError::NoError);
+				handler->handleFeedbagItem(this, item, Add, FeedbagError::NoError);
 		}
 	}
 	for (AllItemsHash::Iterator it = d->itemsById.begin(); it != d->itemsById.end(); ++it) {
 		const quint16 type = it.key().first;
 		if (type != SsiGroup && types.contains(type)) {
 			const FeedbagItem &item = it.value();
-			handler->handleFeedbagItem(this, item, AddModify, FeedbagError::NoError);
+			handler->handleFeedbagItem(this, item, Add, FeedbagError::NoError);
 		}
 	}
 }
@@ -1121,13 +1123,4 @@ QDebug &operator<<(QDebug &stream, const Ireen::FeedbagItem &item)
 	stream.nospace() << ")";
 	return stream;
 }
-
-struct Ctor
-{
-	Ctor()
-	{
-		qRegisterMetaTypeStreamOperators<Ireen::FeedbagItem>("qutim_sdk_0_3::oscar::FeedbagItem");
-	}
-};
-static Ctor ctor;
 

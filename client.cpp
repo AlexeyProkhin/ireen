@@ -275,7 +275,7 @@ bool ClientPrivate::removeCapability(const QString &type)
 void Client::setCapability(const Capability &capability, const QString &type)
 {
 	Q_D(Client);
-	setCapability(capability, type);
+	d->setCapability(capability, type);
 	d->sendUserInfo();
 }
 
