@@ -109,8 +109,8 @@ private:
 	friend class Feedbag;
 	friend class FeedbagPrivate;
 	friend class FeedbagItemPrivate;
-	friend QDataStream &operator<<(QDataStream &out, const FeedbagItem &item);
-	friend QDataStream &operator>>(QDataStream &in, FeedbagItem &item);
+	friend IREEN_EXPORT QDataStream &operator<<(QDataStream &out, const FeedbagItem &item);
+	friend IREEN_EXPORT QDataStream &operator>>(QDataStream &in, FeedbagItem &item);
 	QSharedDataPointer<FeedbagItemPrivate> d;
 };
 

@@ -118,7 +118,9 @@ Channel2MessageData::Channel2MessageData(const QByteArray &message, bool utf8, c
 Channel2MessageData::Channel2MessageData(const QString &message, QTextCodec *codec, const Cookie &cookie) :
 	Channel2BasicMessageData(0, ICQ_CAPABILITY_SRVxRELAY, cookie)
 {
-	init(codec->fromUnicode(message), codec == Util::utf8Codec(), cookie);
+    QByteArray msg = codec->fromUnicode(message);
+    msg += '\0';
+	init(msg, codec == Util::utf8Codec(), cookie);
 }
 
 void Channel2MessageData::init(quint16 ackType, const Tlv2711 &data)
