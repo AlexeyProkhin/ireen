@@ -82,11 +82,7 @@ Client::Client(const QString &uin, QObject *parent) :
 	m_infos << SNACInfo(LocationFamily, LocationRightsReply)
 			<< SNACInfo(BosFamily, PrivacyRightsReply);
 
-	// DetectCodec uses Util::utf8Codec() internally, initialize
-	// the codec before detectCodec.
-	Q_UNUSED(Util::utf8Codec());
-
-	d->uin = uin;
+    d->uin = uin;
 	d->statusFlags = 0x0000;
 	d->isIdle = false;
 	d->feedbag = 0;

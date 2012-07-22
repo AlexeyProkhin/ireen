@@ -45,7 +45,7 @@ class DetectCodec : public QTextCodec
 public:
 	inline DetectCodec(QTextCodec **asciiCodec) : m_asciiCodec(asciiCodec) {}
 protected:
-	QByteArray name() const { return Util::utf8Codec()->name() + " wrapper"; }
+	QByteArray name() const { return "ireen-detect-codec"; }
 
 	QString convertToUnicode(const char *chars, int len, ConverterState *state) const
 	{
@@ -60,7 +60,7 @@ protected:
 		return Util::utf8Codec()->fromUnicode(input, number, state);
 	}
 
-	int mibEnum() const { return Util::utf8Codec()->mibEnum(); }
+	int mibEnum() const { return 0; }
 private:
 	QTextCodec **m_asciiCodec;
 };
