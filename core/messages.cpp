@@ -34,7 +34,7 @@ using namespace Util;
 Channel1MessageData::Channel1MessageData(const QString &message, QTextCodec *codec)
 {
 	Q_ASSERT(codec != Util::utf8Codec());
-	Channel1Codec charset = codec == Util::utf16Codec() ? CodecAnsi : CodecUtf16Be;
+	Channel1Codec charset = codec != Util::utf16Codec() ? CodecAnsi : CodecUtf16Be;
 	init(fromUnicode(message, codec), charset);
 }
 
