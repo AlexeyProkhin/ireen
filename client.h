@@ -30,11 +30,6 @@
 #include "ireen_global.h"
 #include "abstractconnection.h"
 #include "status.h"
-#if IREEN_USE_MD5_LOGIN
-#include "md5login.h"
-#else
-#include "oscarauth.h"
-#endif
 
 namespace Ireen {
 
@@ -46,6 +41,60 @@ class Roster;
 class Feedbag;
 class Md5Login;
 class ClientPrivate;
+class MD5LoginDataPrivate;
+class OAuthLoginDataPrivate;
+
+class IREEN_EXPORT MD5LoginData
+{
+public:
+	MD5LoginData(const QString &password = QString());
+	~MD5LoginData();
+	MD5LoginData(const MD5LoginData &other);
+	MD5LoginData &operator=(const MD5LoginData &other);
+	QString password() const;
+	void setPassword(const QString &password);
+	QString loginServer() const;
+	quint16 loginServerPort() const;
+	void setLoginServer(const QString &server, quint16 port);
+#if IREEN_SSL_SUPPORT
+	void setSslMode(bool enableSsl = true);
+	bool isSslEnabled() const;
+#endif
+private:
+	QSharedDataPointer<MD5LoginDataPrivate> d;
+};
+
+#if IREEN_SSL_SUPPORT
+
+class IREEN_EXPORT OAuthLoginData
+{
+public:
+	OAuthLoginData();
+	~OAuthLoginData();
+	OAuthLoginData(const OAuthLoginData &other);
+	OAuthLoginData &operator=(const OAuthLoginData &other);
+	QString developerId() const;
+	void setDeveloperId(const QString &developerId);
+	QString clientName() const;
+	void setClientName(const QString &clientName);
+	QString distributionId() const;
+	void setDistributionId(const QString &distributionId);
+	QString password() const;
+	void setPassword(const QString &password);
+	void setSslMode(bool enableSsl = true);
+	bool isSslEnabled() const;
+	int versionMajor() const;
+	int versionMinor() const;
+	int versionSecMinor() const;
+	int versionPatch() const;
+	void setVersion(int major, int minor, int secMinor, int patch);
+	QVariant lastToken() const;
+	void setLastToken(const QVariant &tokenData);
+private:
+	QSharedDataPointer<OAuthLoginDataPrivate> d;
+};
+
+#endif
 
 class IREEN_EXPORT Client: public AbstractConnection
 {
@@ -54,17 +103,16 @@ class IREEN_EXPORT Client: public AbstractConnection
 public:
 	Client(const QString &uin, QObject *parent);
 	void login(const QString &password);
+	void login(const MD5LoginData &data);
+#if IREEN_SSL_SUPPORT
+	void login(const OAuthLoginData &data);
+#endif
 	void disconnectFromHost(bool force = false);
 	QString uin() const;
 	void sendStatus(Status status);
 	QAbstractSocket::SocketState socketState() const;
 	Status status() const;
 	bool isConnected();
-#if IREEN_USE_MD5_LOGIN
-	void setLoginServer(const QString &server, quint16 port);
-	QString loginServer() const;
-	quint16 loginServerPort() const;
-#endif
 	void setCapability(const Capability &capability, const QString &type);
 	bool removeCapability(const Capability &capability);
 	bool removeCapability(const QString &type);
@@ -77,12 +125,13 @@ public:
 	QTextCodec *detectCodec() const;
 signals:
 	void loginFinished();
+	void loginTokenUpdated(const QVariant &token);
 protected:
 	void handleSNAC(AbstractConnection *conn, const SNAC &snac);
 private slots:
 	void onDisconnect();
 	void onError(ConnectionError error);
-	void md5Error(Ireen::AbstractConnection::ConnectionError error);
+	void authError(Ireen::AbstractConnection::ConnectionError error);
 	void onCookieTimeout();
 	void finishLogin();
 private:
@@ -92,6 +141,7 @@ private:
 private:
 	friend class Cookie;
 	friend class Md5Login;
+	friend class OscarAuth;
 	friend class Feedbag;
 };
 

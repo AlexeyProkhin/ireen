@@ -33,16 +33,13 @@
 
 namespace Ireen {
 
-Md5Login::Md5Login(Client *client, const QString &password) :
+Md5Login::Md5Login(Client *client, const MD5LoginData &loginData) :
 	AbstractConnection(client),
-	m_loginPort(0),
 	m_bossPort(0),
+	m_loginData(loginData),
 	m_client(client),
-	m_password(password),
 	m_hostReqId(0)
 {
-	m_password = password;
-
 	m_infos.clear();
 	m_infos << SNACInfo(AuthorizationFamily, SignonLoginReply)
 			<< SNACInfo(AuthorizationFamily, SignonAuthKey);
@@ -61,36 +58,43 @@ Md5Login::~Md5Login()
 		QHostInfo::abortHostLookup(m_hostReqId);
 }
 
-void Md5Login::setLoginServer(const QString &server, quint16 port)
-{
-	m_loginServer = server;
-	m_loginPort   = port;
-}
-
 void Md5Login::login()
 {
-	m_bossAddr.clear();
-	m_cookie.clear();
-	// Connecting to login server
-	Socket *s = socket();
-	if (s->state() != QAbstractSocket::UnconnectedState)
-		s->abort();
-	QString loginServer = m_loginServer.isEmpty() ? QLatin1String("login.icq.com") : m_loginServer;
-	m_hostReqId = QHostInfo::lookupHost(loginServer, this, SLOT(hostFound(QHostInfo)));
+#if IREEN_SSL_SUPPORT
+	if (m_loginData.isSslEnabled()) {
+		m_bossAddr.clear();
+		m_cookie.clear();
+		// Connecting to login server
+		Socket *s = socket();
+		if (s->state() != QAbstractSocket::UnconnectedState)
+			s->abort();
+		QString loginServer = m_loginData.loginServer();
+		quint16 loginPort   = m_loginData.loginServerPort();
+		if (loginServer.isEmpty())
+			loginServer = QLatin1String("slogin.icq.com");
+		if (loginPort == 0)
+			loginPort = 443;
+		socket()->connectToHostEncrypted(loginServer, loginPort);
+	} else
+#endif
+	{
+		m_bossAddr.clear();
+		m_cookie.clear();
+		// Connecting to login server
+		Socket *s = socket();
+		if (s->state() != QAbstractSocket::UnconnectedState)
+			s->abort();
+		QString loginServer = m_loginData.loginServer();
+		if (loginServer.isEmpty())
+			loginServer = QLatin1String("login.icq.com");
+		m_hostReqId = QHostInfo::lookupHost(loginServer, this, SLOT(hostFound(QHostInfo)));
+	}
 }
 
 #if IREEN_SSL_SUPPORT
 void Md5Login::sslLogin()
 {
-	m_bossAddr.clear();
-	m_cookie.clear();
-	// Connecting to login server
-	Socket *s = socket();
-	if (s->state() != QAbstractSocket::UnconnectedState)
-		s->abort();
-	QString loginServer = m_loginServer.isEmpty() ? QLatin1String("slogin.icq.com") : m_loginServer;
-	quint16 loginPort   = m_loginPort ? 443 : m_loginPort;
-	socket()->connectToHostEncrypted(loginServer, loginPort);
+
 }
 #endif
 
@@ -98,10 +102,12 @@ void Md5Login::hostFound(const QHostInfo &host)
 {
 	m_hostReqId = 0;
 	if (!host.addresses().isEmpty()) {
-		quint16 loginPort = m_loginPort == 0 ? 5190 : m_loginPort;
+		quint16 loginPort = m_loginData.loginServerPort();
+		if (loginPort == 0)
+			loginPort = 5190;
 		socket()->connectToHost(host.addresses().at(qrand() % host.addresses().size()), loginPort);
 	} else {
-		setError(HostNotFound, tr("No IP addresses were found for the host '%1'").arg(m_loginServer));
+		setError(HostNotFound, tr("No IP addresses were found for the host '%1'").arg(m_loginData.loginServer()));
 	}
 }
 
@@ -139,7 +145,7 @@ void Md5Login::handleSNAC(AbstractConnection *conn, const SNAC &sn)
 		snac.appendTLV<QByteArray>(0x0001, m_client->uin().toUtf8());
 		{
 			quint32 length = qFromBigEndian<quint32>((uchar *) sn.data().constData());
-			QByteArray password = m_client->asciiCodec()->fromUnicode(m_password);
+			QByteArray password = m_client->asciiCodec()->fromUnicode(m_loginData.password());
 			QByteArray key = sn.data().mid(2, length);
 			key += QCryptographicHash::hash(password, QCryptographicHash::Md5);
 			key += "AOL Instant Messenger (SM)";

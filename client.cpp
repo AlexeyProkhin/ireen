@@ -31,6 +31,9 @@
 #include "messages.h"
 #include "sessiondataitem.h"
 
+#include "md5login.h"
+#include "oscarauth.h"
+
 #include <QHostInfo>
 #include <QBuffer>
 #include <QTimer>
@@ -38,6 +41,176 @@
 #include <QMetaMethod>
 
 namespace Ireen {
+
+MD5LoginData::MD5LoginData(const QString &password) :
+	d(new MD5LoginDataPrivate)
+{
+	d->password = password;
+}
+
+MD5LoginData::~MD5LoginData()
+{
+}
+
+MD5LoginData::MD5LoginData(const MD5LoginData &other) :
+	d(other.d)
+{
+
+}
+
+MD5LoginData &MD5LoginData::operator=(const MD5LoginData &other)
+{
+	d = other.d;
+	return *this;
+}
+
+QString MD5LoginData::password() const
+{
+	return d->password;
+}
+
+void MD5LoginData::setPassword(const QString &password)
+{
+	d->password = password;
+}
+
+QString MD5LoginData::loginServer() const
+{
+	return d->server;
+}
+
+quint16 MD5LoginData::loginServerPort() const
+{
+	return d->port;
+}
+
+void MD5LoginData::setLoginServer(const QString &server, quint16 port)
+{
+	d->server = server;
+	d->port = port;
+}
+
+#if IREEN_SSL_SUPPORT
+
+void MD5LoginData::setSslMode(bool enableSsl)
+{
+	d->ssl = enableSsl;
+}
+
+bool MD5LoginData::isSslEnabled() const
+{
+	return d->ssl;
+}
+
+#endif
+
+OAuthLoginData::OAuthLoginData() :
+	d(new OAuthLoginDataPrivate)
+{
+}
+
+OAuthLoginData::~OAuthLoginData()
+{
+}
+
+OAuthLoginData::OAuthLoginData(const OAuthLoginData &other) :
+	d(other.d)
+{
+}
+
+OAuthLoginData &OAuthLoginData::operator=(const OAuthLoginData &other)
+{
+	d = other.d;
+	return *this;
+}
+
+QString OAuthLoginData::developerId() const
+{
+	return d->devId;
+}
+
+void OAuthLoginData::setDeveloperId(const QString &developerId)
+{
+	d->devId = developerId;
+}
+
+QString OAuthLoginData::clientName() const
+{
+	return d->clienName;
+}
+
+void OAuthLoginData::setClientName(const QString &clientName)
+{
+	d->clienName = clientName;
+}
+
+QString OAuthLoginData::distributionId() const
+{
+	return d->distId;
+}
+
+void OAuthLoginData::setDistributionId(const QString &distributionId)
+{
+	d->distId = distributionId;
+}
+
+QString OAuthLoginData::password() const
+{
+	return d->password;
+}
+
+void OAuthLoginData::setPassword(const QString &password)
+{
+	d->password = password;
+}
+
+void OAuthLoginData::setSslMode(bool enableSsl)
+{
+	d->ssl = enableSsl;
+}
+
+bool OAuthLoginData::isSslEnabled() const
+{
+	return d->ssl;
+}
+
+int OAuthLoginData::versionMajor() const
+{
+	return d->versionMajor;
+}
+
+int OAuthLoginData::versionMinor() const
+{
+	return d->versionMinor;
+}
+
+int OAuthLoginData::versionSecMinor() const
+{
+	return d->versionSecMinor;
+}
+
+int OAuthLoginData::versionPatch() const
+{
+	return d->versionPatch;
+}
+
+void OAuthLoginData::setVersion(int major, int minor, int secMinor, int patch)
+{
+	d->versionMajor = major;
+	d->versionMinor = minor;
+	d->versionSecMinor = secMinor;
+	d->versionPatch = patch;
+}
+
+QVariant OAuthLoginData::lastToken() const
+{
+	return d->lastToken;
+}
+
+void OAuthLoginData::setLastToken(const QVariant &tokenData)
+{
+	d->lastToken = tokenData;
+}
 
 void ClientPrivate::sendUserInfo(bool force)
 {
@@ -58,14 +231,8 @@ void ClientPrivate::connectToBOSS(const QString &host, quint16 port, const QByte
 	auth_cookie = cookie;
 	if (socket->state() != QAbstractSocket::UnconnectedState)
 		socket->abort();
-#if defined(IREEN_SSL_SUPPORT)
-	if (q->isSslEnabled()) {
-		socket->connectToHostEncrypted(host, port);
-	} else
-#endif
-	{
-		socket->connectToHost(host, port);
-	}
+	socket->connectToHost(host, port);
+	stopLogin();
 }
 
 void ClientPrivate::setFeedbag(Feedbag *feedbag_)
@@ -75,6 +242,28 @@ void ClientPrivate::setFeedbag(Feedbag *feedbag_)
 	q->connect(feedbag, SIGNAL(loaded()), SLOT(finishLogin()));
 }
 
+void ClientPrivate::login(AbstractLoginMethod *newAuth)
+{
+	stopLogin();
+	q->setError(Client::NoError);
+	QObject *obj = newAuth->toObject();
+	q->connect(obj, SIGNAL(error(Ireen::AbstractConnection::ConnectionError)),
+			   q, SLOT(authError(Ireen::AbstractConnection::ConnectionError)));
+	// Start connecting after the status has been updated.
+	QTimer::singleShot(0, obj, SLOT(login()));
+	auth = newAuth;
+}
+
+bool ClientPrivate::stopLogin()
+{
+	if (auth) {
+		auth->toObject()->deleteLater();
+		auth = 0;
+		return true;
+	}
+	return false;
+}
+
 Client::Client(const QString &uin, QObject *parent) :
 	AbstractConnection(new ClientPrivate(this), parent)
 {
@@ -82,7 +271,7 @@ Client::Client(const QString &uin, QObject *parent) :
 	m_infos << SNACInfo(LocationFamily, LocationRightsReply)
 			<< SNACInfo(BosFamily, PrivacyRightsReply);
 
-    d->uin = uin;
+	d->uin = uin;
 	d->statusFlags = 0x0000;
 	d->isIdle = false;
 	d->feedbag = 0;
@@ -117,32 +306,22 @@ Client::Client(const QString &uin, QObject *parent) :
 
 void Client::login(const QString &password)
 {
-	Q_D(Client);
-	Q_UNUSED(password);
-	setError(NoError);
-#if IREEN_USE_MD5_LOGIN
-	if (d->auth)
-		d->auth->deleteLater();
-	d->auth = new Md5Login(this, password);
-	d->auth->setLoginServer(d->loginServer, d->loginServerPort);
-	connect(d->auth, SIGNAL(disconnected()), d->auth, SLOT(deleteLater()));
-	connect(d->auth, SIGNAL(error(Ireen::AbstractConnection::ConnectionError)),
-			this, SLOT(md5Error(Ireen::AbstractConnection::ConnectionError)));
-	// Start connecting after the status has been updated.
-	if (isSslEnabled())
-		QTimer::singleShot(0, d->auth, SLOT(sslLogin()));
-	else
-		QTimer::singleShot(0, d->auth, SLOT(login()));
-#else
-	if (d->auth)
-		d->auth->deleteLater();
-	d->auth = new OscarAuth(d->account);
-//	connect(d->auth.data(), SIGNAL(disconnected()), d->auth.data(), SLOT(deleteLater()));
-	connect(d->auth.data(), SIGNAL(error(Ireen::AbstractConnection::ConnectionError)),
-			SLOT(md5Error(Ireen::AbstractConnection::ConnectionError)));
-	QTimer::singleShot(0, d->auth, SLOT(login()));
-#endif
+	login(MD5LoginData(password));
 }
+
+void Client::login(const MD5LoginData &data)
+{
+	d_func()->login(new Md5Login(this, data));
+}
+
+#if IREEN_SSL_SUPPORT
+
+void Client::login(const OAuthLoginData &data)
+{
+	d_func()->login(new OscarAuth(this, data));
+}
+
+#endif
 
 QString Client::uin() const
 {
@@ -153,12 +332,8 @@ void Client::disconnectFromHost(bool force)
 {
 	Q_D(Client);
 	d->status = Status::Offline;
-	if (d->auth) {
-		d->auth->deleteLater();
-		d->auth.clear();
-	} else {
+	if (!d->stopLogin())
 		AbstractConnection::disconnectFromHost(force);
-	}
 }
 
 void Client::processNewConnection()
@@ -199,17 +374,8 @@ void Client::processCloseConnection()
 QAbstractSocket::SocketState Client::socketState() const
 {
 	Q_D(const Client);
-#if IREEN_USE_MD5_LOGIN
 	if (d->auth)
-		return d->auth->socket()->state();
-#else
-	if (d->auth) {
-		OscarAuth::State state = d->auth->state();
-		if (state == OscarAuth::Invalid || state == OscarAuth::AtError)
-			return QAbstractSocket::UnconnectedState;
-		return QAbstractSocket::ConnectingState;
-	}
-#endif
+		return d->auth->socketState();
 	return socket()->state();
 }
 
@@ -222,27 +388,6 @@ bool Client::isConnected()
 {
 	return state() == AbstractConnection::Connected;
 }
-
-#if IREEN_USE_MD5_LOGIN
-
-void Client::setLoginServer(const QString &server, quint16 port)
-{
-	Q_D(Client);
-	d->loginServer = server;
-	d->loginServerPort = port;
-}
-
-QString Client::loginServer() const
-{
-	return d_func()->loginServer;
-}
-
-quint16 Client::loginServerPort() const
-{
-	return d_func()->loginServerPort;
-}
-
-#endif
 
 void ClientPrivate::setCapability(const Capability &capability, const QString &type)
 {
@@ -350,10 +495,11 @@ void Client::onError(ConnectionError error)
 	AbstractConnection::onError(error);
 }
 
-void Client::md5Error(ConnectionError e)
+void Client::authError(ConnectionError e)
 {
 	Q_D(Client);
 	setError(e, d->auth->errorString());
+	d->stopLogin();
 	onDisconnect();
 }
 

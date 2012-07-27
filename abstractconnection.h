@@ -27,21 +27,10 @@
 #ifndef IREEN_ABSTRACTCONNECTION_H
 #define IREEN_ABSTRACTCONNECTION_H
 
-#if IREEN_USE_MD5_LOGIN
-
 #if IREEN_SSL_SUPPORT
 #include <QSslSocket>
 #else
 #include <QTcpSocket>
-#endif
-
-#else
-
-#include <QSslSocket>
-#if !IREEN_SSL_SUPPORT
-# define IREEN_SSL_SUPPORT 1
-#endif
-
 #endif
 
 #include <QMap>
@@ -164,19 +153,21 @@ public:
 	virtual void disconnectFromHost(bool force = false);
 	const QHostAddress &externalIP() const;
 	const QList<quint16> &servicesList();
-	Socket *socket();
+	Socket *socket(); // FIXME: Make it private
 	const Socket *socket() const;
+	QNetworkProxy proxy() const;
 	ConnectionError error();
 	QString errorString();
 	const ClientInfo &clientInfo();
-	void setSslEnabled(bool enabled);
-	bool isSslEnabled();
 	State state() const;
 	void registerInitializationSnacs(const QList<SNACInfo> &snacs, bool append = true);
 	void registerInitializationSnac(quint16 family, quint16 subtype);
+public slots:
+	void setProxy(const QNetworkProxy &proxy);
 signals:
 	void error(Ireen::AbstractConnection::ConnectionError error);
 	void disconnected();
+	void proxyUpdated(const QNetworkProxy &proxy);
 protected:
 	AbstractConnection(AbstractConnectionPrivate *d, QObject *parent);
 	const FLAP &flap();
@@ -191,8 +182,6 @@ protected:
 	virtual void handleSNAC(AbstractConnection *conn, const SNAC &snac);
 	void setState(AbstractConnection::State state);
 	static quint16 generateFlapSequence();
-protected slots:
-	void setProxy(const QNetworkProxy &proxy);
 private slots:
 	void processSnac();
 	void readData();

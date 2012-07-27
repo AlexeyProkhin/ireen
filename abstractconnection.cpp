@@ -200,12 +200,6 @@ void AbstractConnectionPrivate::init(AbstractConnection *q)
 	socket->setPeerVerifyMode(QSslSocket::VerifyNone); // TODO:
 #endif
 
-#if IREEN_USE_MD5_LOGIN
-	sslMode = false;
-#else
-	sslMode = true;
-#endif
-
 	q->connect(socket, SIGNAL(readyRead()), SLOT(readData()));
 	q->connect(socket, SIGNAL(stateChanged(QAbstractSocket::SocketState)),
 			SLOT(stateChanged(QAbstractSocket::SocketState)));
@@ -288,6 +282,11 @@ const Socket *AbstractConnection::socket() const
 	return d_func()->socket;
 }
 
+QNetworkProxy AbstractConnection::proxy() const
+{
+	return d_func()->socket->proxy();
+}
+
 AbstractConnection::ConnectionError AbstractConnection::error()
 {
 	return d_func()->error;
@@ -299,6 +298,7 @@ void AbstractConnection::setProxy(const QNetworkProxy &oldProxy)
 	proxy.setCapabilities(proxy.capabilities() &=~ QNetworkProxy::HostNameLookupCapability);
 	debug() << Q_FUNC_INFO << proxy.type() << proxy.hostName() << proxy.port() << proxy.capabilities();
 	d_func()->socket->setProxy(proxy);
+	emit proxyUpdated(proxy);
 }
 
 QString AbstractConnection::errorString()
@@ -385,24 +385,6 @@ QString AbstractConnection::errorString()
 const ClientInfo &AbstractConnection::clientInfo()
 {
 	return d_func()->clientInfo;
-}
-
-void AbstractConnection::setSslEnabled(bool enabled)
-{
-#if IREEN_SSL_SUPPORT
-	d_func()->sslMode = enabled;
-#else
-	Q_ASSERT(!enabled && "SSL is not supported");
-#endif
-}
-
-bool AbstractConnection::isSslEnabled()
-{
-#if defined(IREEN_SSL_SUPPORT) && BOS_SERVER_SUPPORTS_SSL
-	return d_func()->sslMode;
-#else
-	return false;
-#endif
 }
 
 AbstractConnection::State AbstractConnection::state() const

@@ -10,7 +10,6 @@ set(CMAKE_IREEN_VERSION_PATCH 0 CACHE INT "Release Ireen version number" FORCE)
 set(CMAKE_IREEN_VERSION_STRING "${CMAKE_IREEN_VERSION_MAJOR}.${CMAKE_IREEN_VERSION_MINOR}.${CMAKE_IREEN_VERSION_PATCH}" CACHE STRING "Ireen version string" FORCE)
 
 # Options
-option(IREEN_USE_MD5_LOGIN "Use obsolete md5 login" OFF)
 option(IREEN_USE_EXTERNAL_K8JSON "Use external k8json library" OFF)
 option(IREEN_USE_INTERNAL_HMAC "Use internal hmac-sha256 implemntation instead of QCA2" OFF)
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/hmac")
@@ -18,66 +17,10 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/hmac")
 endif()
 
 # Library sources
-set(SRC
-    core/capability.cpp
-    core/cookie.cpp
-    core/dataunit.cpp
-    core/flap.cpp
-    core/sessiondataitem.cpp
-    core/snac.cpp
-    core/snachandler.cpp
-    core/tlv.cpp
-    core/util.cpp
-    core/xtraz.cpp
-    core/messages.cpp
-    core/authorization.cpp
-    buddypicture.cpp
-    abstractconnection.cpp
-    status.cpp
-    feedbag.cpp
-    client.cpp
-    roster.cpp
-    messagehandler.cpp
-    privacylists.cpp
-)
+file(GLOB SRC *.cpp core/*.cpp)
 
 # Library headers
-set(HDR
-    ireen_global.h
-    core/capability.h
-    core/buddycaps.h
-    core/cookie.h
-    core/dataunit.h
-    core/flap.h
-    core/sessiondataitem.h
-    core/snac.h
-    core/snachandler.h
-    core/tlv.h
-    core/util.h
-    core/xtraz.h
-    core/messages.h
-    core/authorization.h
-    buddypicture.h
-    abstractconnection.h
-    abstractconnection_p.h
-    status.h
-    feedbag.h
-    client.h
-    client_p.h
-    roster.h
-    messagehandler.h
-    privacylists.h
-)
-
-# Add login class implementation
-if(IREEN_USE_MD5_LOGIN)
-    list(APPEND SRC md5login.cpp)
-    list(APPEND HDR md5login.h)
-    ADD_DEFINITIONS(-DIREEN_USE_MD5_LOGIN=1)
-else()
-    list(APPEND SRC oscarauth.cpp)
-    list(APPEND HDR oscarauth.h)
-endif()
+file(GLOB HDR *.h core/*.h)
 
 # Build k8json
 if (NOT IREEN_USE_EXTERNAL_K8JSON)
@@ -117,6 +60,9 @@ endif()
 # Check if qt was built with openssl support
 if( QT_QCONFIG MATCHES "openssl" )
     ADD_DEFINITIONS(-DIREEN_SSL_SUPPORT=1)
+else()
+    LIST(REMOVE_ITEM SRC oscarauth.cpp)
+    LIST(REMOVE_ITEM HDR oscarauth.h)
 endif()
 
 # Add include directories

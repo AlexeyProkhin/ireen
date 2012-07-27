@@ -80,7 +80,6 @@ class AbstractConnectionPrivate
 public:
 	inline quint16 seqNum() { return seqnum++; }
 	inline quint32 nextId() { return id++; }
-	bool sslMode;
 	Socket *socket;
 	FLAP flap;
 	QMultiMap<quint32, SNACHandler*> handlers;

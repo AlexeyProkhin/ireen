@@ -24,46 +24,64 @@
 **
 ****************************************************************************/
 
-#ifndef IREEN_MD5LOGIN_H
-#define IREEN_MD5LOGIN_H
+#ifndef IREEN_OSCARAUTH_H
+#define IREEN_OSCARAUTH_H
+
+#include <QObject>
+#include <QNetworkAccessManager>
+#include <QObjectCleanupHandler>
 
 #include "client_p.h"
-#include <QHostInfo>
+
+class QUrl;
 
 namespace Ireen {
 
-class Md5Login : public AbstractConnection, public AbstractLoginMethod
+class OscarAuth : public QObject, public AbstractLoginMethod
 {
 	Q_OBJECT
 public:
-	Md5Login(Client *client, const MD5LoginData &loginData);
-	virtual ~Md5Login();
-	QAbstractSocket::SocketState socketState() { return AbstractConnection::socket()->state(); }
+	enum State
+	{
+		Invalid,
+		AtPasswordRequest,
+		AtLogin,
+		AtSessionStart,
+		AtError
+	};
+
+	explicit OscarAuth(Client *client, const OAuthLoginData &loginData);
+	virtual ~OscarAuth();
+	State state() const { return m_state; }
+	QAbstractSocket::SocketState socketState();
 	QObject *toObject() { return this; }
 public slots:
+	void setProxy(const QNetworkProxy &proxy);
 	void login();
-#if IREEN_SSL_SUPPORT
-	void sslLogin();
-#endif
 protected:
-	virtual void processNewConnection();
-	virtual void processCloseConnection();
-	virtual void handleSNAC(AbstractConnection *conn, const SNAC &snac);
+	void clientLogin(bool longTerm);
+	void startSession(const QByteArray &token, const QByteArray &sessionKey);
+signals:
+	void stateChanged(Ireen::OscarAuth::State);
+	void error(Ireen::AbstractConnection::ConnectionError error);
 private slots:
-	void hostFound(const QHostInfo &host);
+	void onClientLoginFinished();
+	void onStartSessionFinished();
+	void onSslErrors(const QList<QSslError> &errors);
 private:
-#if IREEN_SSL_SUPPORT
-	bool useSsl;
-#endif
-	quint16 m_bossPort;
-	MD5LoginData m_loginData;
-	QByteArray m_bossAddr;
-	QByteArray m_cookie;
+	QString generateLanguage();
+	int version() const;
+	QByteArray generateSignature(const QByteArray &method, const QByteArray &sessionSecret, const QUrl &url);
+private:
 	Client *m_client;
-	int m_hostReqId;
+	State m_state;
+	OAuthLoginData m_loginData;
+	QVariantMap m_tokenData;
+	QNetworkAccessManager m_manager;
+	QObjectCleanupHandler m_cleanupHandler;
 };
 
-} // namespace Ireen
+} // Ireen
 
-#endif // IREEN_MD5LOGIN_H
+#endif // IREEN_OSCARAUTH_H
 

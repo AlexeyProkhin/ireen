@@ -27,16 +27,11 @@
 #ifndef IREEN_CLIENT_P_H
 #define IREEN_CLIENT_P_H
 
+#include "client.h"
 #include "abstractconnection_p.h"
 #include "capability.h"
 #include "feedbag.h"
 #include <k8json/k8json.h>
-
-#if IREEN_USE_MD5_LOGIN
-#include "md5login.h"
-#else
-#include "oscarauth.h"
-#endif
 
 namespace Ireen {
 
@@ -65,6 +60,46 @@ private:
 	QTextCodec **m_asciiCodec;
 };
 
+class MD5LoginDataPrivate : public QSharedData
+{
+public:
+#if IREEN_SSL_SUPPORT
+	bool ssl;
+#endif
+	QString password;
+	QString server;
+	quint16 port;
+};
+
+#if IREEN_SSL_SUPPORT
+
+class OAuthLoginDataPrivate : public QSharedData
+{
+public:
+	bool ssl;
+	int versionMajor;
+	int versionMinor;
+	int versionSecMinor;
+	int versionPatch;
+	QString password;
+	QString devId;
+	QString clienName;
+	QString distId;
+	QVariant lastToken;
+};
+
+#endif
+
+class AbstractLoginMethod
+{
+public:
+	virtual void login() = 0;
+	virtual QAbstractSocket::SocketState socketState() = 0;
+	virtual QObject *toObject() = 0;
+	QString errorString() const { return m_errorString; }
+protected:
+	QString m_errorString;
+};
 
 class ClientPrivate : public AbstractConnectionPrivate
 {
@@ -77,6 +112,8 @@ public:
 	void connectToBOSS(const QString &host, quint16 port, const QByteArray &cookie);
 	void sendUserInfo(bool force = false);
 	void setFeedbag(Feedbag *feedbag);
+	void login(AbstractLoginMethod *auth);
+	bool stopLogin();
 public:
 	bool isIdle;
 	quint16 statusFlags;
@@ -90,13 +127,7 @@ public:
 	Client *q;
 	QTextCodec *asciiCodec;
 	DetectCodec *detectCodec;
-#if IREEN_USE_MD5_LOGIN
-	Pointer<Md5Login> auth;
-	QString loginServer;
-	quint16 loginServerPort;
-#else
-	Pointer<OscarAuth> auth;
-#endif
+	AbstractLoginMethod *auth;
 };
 
 } // namespace Ireen
