@@ -17,10 +17,10 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/hmac")
 endif()
 
 # Library sources
-file(GLOB SRC *.cpp core/*.cpp)
+file(GLOB SRC *.cpp core/*.cpp metainfo/*.cpp)
 
 # Library headers
-file(GLOB HDR *.h core/*.h)
+file(GLOB HDR *.h   core/*.h   metainfo/*.h)
 
 # Build k8json
 if (NOT IREEN_USE_EXTERNAL_K8JSON)
