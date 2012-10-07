@@ -91,6 +91,11 @@ MessageHandler::~MessageHandler()
 {
 }
 
+Client *MessageHandler::client() const
+{
+	return d->client;
+}
+
 void MessageHandler::registerHandler(const Capability &capability, MessagePlugin *handler)
 {
 	d->msg_plugins.insert(capability, handler);

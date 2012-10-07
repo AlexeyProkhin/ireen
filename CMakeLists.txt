@@ -68,6 +68,7 @@ endif()
 # Add include directories
 INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
     core
     3rdparty
 )

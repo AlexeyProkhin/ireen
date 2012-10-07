@@ -66,6 +66,7 @@ class IREEN_EXPORT MessageHandler : public QObject
 public:
 	MessageHandler(Client *client);
 	virtual ~MessageHandler();
+	Client *client() const;
 	void registerHandler(const Capability &capability, MessagePlugin *handler);
 	void registerHandler(const Capability &type, quint16 id, Tlv2711Plugin *handler);
 	void setDetectCodec(bool detectCodec = true);
