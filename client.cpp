@@ -102,8 +102,6 @@ bool MD5LoginData::isSslEnabled() const
 	return d->ssl;
 }
 
-#endif
-
 OAuthLoginData::OAuthLoginData() :
 	d(new OAuthLoginDataPrivate)
 {
@@ -211,6 +209,8 @@ void OAuthLoginData::setLastToken(const QVariant &tokenData)
 {
 	d->lastToken = tokenData;
 }
+
+#endif
 
 void ClientPrivate::sendUserInfo(bool force)
 {
