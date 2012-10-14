@@ -589,7 +589,7 @@ void OftConnection::cancel()
 	Channel2BasicMessageData data(MsgCancel, ICQ_CAPABILITY_AIMSENDFILE, d->cookie);
 	ServerMessage message(d->uin, data);
 	client()->send(message);
-	close(false);
+    d->close(false);
 }
 
 void OftConnection::accept()
@@ -1257,4 +1257,4 @@ void OftManager::setServerPorts(const QList<quint16> &ports)
 
 } // namespace Ireen
 
-#include "oscarfiletransfer.moc"
+#include "moc_oscarfiletransfer.cpp"

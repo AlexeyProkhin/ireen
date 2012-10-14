@@ -1,0 +1,12 @@
+import qbs.base 1.0
+
+Project {
+    references: [
+        "ireen.qbs",
+        "3rdparty/hmac.qbs",
+        "3rdparty/k8json.qbs"
+    ]
+
+    moduleSearchPaths: [ "qbs/modules" ]
+}
+
